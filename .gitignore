@@ -1,0 +1,29 @@
+# Environment Variables & Secrets
+.env
+*.env
+!.env.example
+*.pem
+*.key
+
+# Backend
+backend/.env
+backend/node_modules/
+backend/dist/
+**/node_modules/
+**/dist/
+
+# Flutter / Mobile
+mobile/.env
+mobile/build/
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.pub-cache/
+mobile/.pub/
+
+# Logs & Temporary files
+*.zip
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
