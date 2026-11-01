@@ -135,8 +135,12 @@ export class BlockchainService {
 
     if (this.isLiveConfigured) {
       try {
+        let cleanKey = this.privateKey.startsWith('0x') ? this.privateKey.substring(2) : this.privateKey;
+        if (cleanKey.length === 63) {
+          cleanKey = '0' + cleanKey;
+        }
         this.provider = new ethers.JsonRpcProvider(this.rpcUrl, this.chainId);
-        this.signer = new ethers.Wallet(this.privateKey, this.provider);
+        this.signer = new ethers.Wallet(cleanKey, this.provider);
         this.contract = new ethers.Contract(this.contractAddress, CONTRACT_ABI, this.signer);
         console.log(`[BlockchainService] Connected to LIVE EVM network: ${this.getNetworkName()} (Chain ID: ${this.chainId})`);
         console.log(`[BlockchainService] Contract address: ${this.contractAddress}`);

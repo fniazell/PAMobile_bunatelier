@@ -424,6 +424,170 @@ class _AdminBlockchainVerificationTabState
     return '${s.substring(0, len ~/ 2)}...${s.substring(s.length - len ~/ 2)}';
   }
 
+  void _showMetaMaskConfigDialog() {
+    const networkName = 'Polygon Amoy Testnet';
+    const rpcUrl = 'https://rpc-amoy.polygon.technology';
+    const chainId = '80002';
+    const symbol = 'POL';
+    const explorer = 'https://amoy.polygonscan.com';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AdminColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        actionsPadding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AdminColors.burgundy.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.account_balance_wallet_rounded, color: AdminColors.burgundy, size: 22),
+            ),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text(
+                'Koneksi MetaMask & Polygon Amoy',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: AdminColors.darkBrown),
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Panduan menghubungkan dompet MetaMask ke jaringan Polygon Amoy Testnet untuk mencatat & memverifikasi e-receipt:',
+                style: TextStyle(fontSize: 12, color: AdminColors.darkBrown, height: 1.4),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AdminColors.warmWhite,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AdminColors.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'PARAMETER JARINGAN METAMASK',
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AdminColors.burgundy, letterSpacing: 0.5),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildCopyableField('Network Name', networkName),
+                    _buildCopyableField('RPC URL', rpcUrl),
+                    _buildCopyableField('Chain ID', chainId),
+                    _buildCopyableField('Currency Symbol', symbol),
+                    _buildCopyableField('Block Explorer', explorer),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AdminColors.darkBrown,
+                        side: const BorderSide(color: AdminColors.border),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      onPressed: () async {
+                        final uri = Uri.parse('https://faucet.polygon.technology/');
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        }
+                      },
+                      icon: const Icon(Icons.water_drop_rounded, size: 14, color: Colors.blue),
+                      label: const Text('Faucet POL ↗', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AdminColors.darkBrown,
+                        side: const BorderSide(color: AdminColors.border),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      onPressed: () async {
+                        final uri = Uri.parse('https://amoy.polygonscan.com');
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        }
+                      },
+                      icon: const Icon(Icons.open_in_new_rounded, size: 14, color: AdminColors.burgundy),
+                      label: const Text('Polygonscan ↗', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              const fullParams = 'Network Name: Polygon Amoy Testnet\nRPC URL: https://rpc-amoy.polygon.technology\nChain ID: 80002\nCurrency: POL\nExplorer: https://amoy.polygonscan.com';
+              _copyToClipboard(fullParams, 'Semua parameter MetaMask');
+            },
+            child: const Text('Salin Semua', style: TextStyle(color: AdminColors.burgundy, fontWeight: FontWeight.w700)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AdminColors.darkBrown,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Tutup', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCopyableField(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: AdminColors.mutedText),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AdminColors.darkBrown, fontFamily: 'monospace'),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          InkWell(
+            onTap: () => _copyToClipboard(value, label),
+            child: const Padding(
+              padding: EdgeInsets.all(3),
+              child: Icon(Icons.copy_rounded, size: 13, color: AdminColors.mutedText),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // 1. Hitung statistik secara terpisah dan jujur sesuai poin 4
@@ -584,7 +748,7 @@ class _AdminBlockchainVerificationTabState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Bun Atelier Blockchain Ledger',
+                      'Bun Atelier • Polygon Amoy Ledger',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w800,
@@ -593,7 +757,7 @@ class _AdminBlockchainVerificationTabState
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      'SHA-256 Hash Chain Immutable',
+                      'Polygon Amoy (Chain ID 80002) • MetaMask Ready',
                       style: AdminColors.sansUI(fontSize: 10.5, color: AdminColors.mutedText),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -694,6 +858,24 @@ class _AdminBlockchainVerificationTabState
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            height: 38,
+            child: OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AdminColors.burgundy,
+                side: const BorderSide(color: AdminColors.burgundy, width: 1.1),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: _showMetaMaskConfigDialog,
+              icon: const Icon(Icons.account_balance_wallet_rounded, size: 16),
+              label: const Text(
+                'KONEKSI METAMASK & JARINGAN AMOY',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11, letterSpacing: 0.3),
+              ),
+            ),
           ),
         ],
       ),

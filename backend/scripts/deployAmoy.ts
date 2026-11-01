@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { ethers } from 'ethers';
@@ -13,9 +14,13 @@ async function main() {
   console.log('   BUN ATELIER — DEPLOY SMART CONTRACT TO POLYGON AMOY TESTNET  ');
   console.log('================================================================\n');
 
-  const rpcUrl = process.env.BLOCKCHAIN_RPC_URL || 'https://rpc-amoy.polygon.technology';
-  const privateKey = process.env.BLOCKCHAIN_PRIVATE_KEY;
-  const network = process.env.BLOCKCHAIN_NETWORK || 'polygon-amoy';
+  const rpcUrl = process.env.BLOCKCHAIN_RPC_URL || 'https://polygon-amoy-bor-rpc.publicnode.com';
+  const rawKey = process.env.BLOCKCHAIN_PRIVATE_KEY || '';
+  let privateKey = rawKey.startsWith('0x') ? rawKey.substring(2) : rawKey;
+  if (privateKey.length === 63) {
+    privateKey = '0' + privateKey;
+  }
+  const network = process.env.BLOCKCHAIN_NETWORK || 'amoy';
   const chainId = parseInt(process.env.BLOCKCHAIN_CHAIN_ID || '80002', 10);
 
   if (!privateKey || privateKey.includes('your_wallet_private_key') || privateKey.includes('private_key_wallet_anda')) {
@@ -73,8 +78,23 @@ async function main() {
   console.log(`🔍 Block Explorer   : https://amoy.polygonscan.com/address/${contractAddress}`);
   console.log(`🌐 Tx Explorer      : https://amoy.polygonscan.com/tx/${txHash}`);
   console.log('----------------------------------------------------------------\n');
-  console.log('Langkah Terakhir: Masukkan alamat ini ke backend/.env:');
-  console.log(`BLOCKCHAIN_CONTRACT_ADDRESS=${contractAddress}\n`);
+
+  try {
+    const envPath = path.resolve(__dirname, '../.env');
+    if (fs.existsSync(envPath)) {
+      let envContent = fs.readFileSync(envPath, 'utf-8');
+      if (envContent.includes('BLOCKCHAIN_CONTRACT_ADDRESS=')) {
+        envContent = envContent.replace(/BLOCKCHAIN_CONTRACT_ADDRESS=.*/, `BLOCKCHAIN_CONTRACT_ADDRESS=${contractAddress}`);
+      } else {
+        envContent += `\nBLOCKCHAIN_CONTRACT_ADDRESS=${contractAddress}\n`;
+      }
+      fs.writeFileSync(envPath, envContent, 'utf-8');
+      console.log(`✅ File backend/.env otomatis diperbarui dengan contract address baru!\n`);
+    }
+  } catch (err: any) {
+    console.log(`⚠️ Gagal menyimpan otomatis ke .env: ${err?.message}. Silakan masukkan manual:`);
+    console.log(`BLOCKCHAIN_CONTRACT_ADDRESS=${contractAddress}\n`);
+  }
 }
 
 main().catch((err) => {

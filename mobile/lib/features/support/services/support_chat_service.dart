@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io' show Platform;
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
@@ -246,11 +247,18 @@ PEDOMAN UTAMA:
       return 'Halo! Aku Bun Buddy, asisten virtual dan konsultan burger resmi Bun Atelier. Aku siap bantu kamu dengan rekomendasi burger lezat, info harga, konversi mata uang, atau info outlet.';
     }
 
-    if (lower.contains('halo') || lower.contains('hai') || lower.contains('hello') || lower.contains('pagi') || lower.contains('siang') || lower.contains('malam')) {
+    if (lower.contains('halo') ||
+        lower.contains('hai') ||
+        lower.contains('hello') ||
+        lower.contains('pagi') ||
+        lower.contains('siang') ||
+        lower.contains('malam')) {
       return 'Halo! Selamat datang di Bun Atelier. Mau cari burger daging sapi juicy, ayam renyah buttermilk, croissant burger, atau cemilan lezat hari ini? Kasih tahu seleramu ya!';
     }
 
-    if (lower.contains('terima kasih') || lower.contains('makasih') || lower.contains('thanks')) {
+    if (lower.contains('terima kasih') ||
+        lower.contains('makasih') ||
+        lower.contains('thanks')) {
       return 'Sama-sama! Selamat menikmati hidangan artisanal kami. Jika ada hal lain yang ingin kamu tanyakan seputar burger Bun Atelier, jangan ragu tanyakan padaku ya!';
     }
 
@@ -278,28 +286,33 @@ PEDOMAN UTAMA:
       for (final h in recentHistory) {
         contents.add({
           'role': h.isUser ? 'user' : 'model',
-          'parts': [{'text': h.text}],
+          'parts': [
+            {'text': h.text},
+          ],
         });
       }
 
       String currentText = message;
-      if (currencyContext != null && currencyContext['formattedConverted'] != null) {
-        currentText += '\n[Info Konversi: ${currencyContext['productName'] ?? 'Pesanan'} seharga ${currencyContext['formattedConverted']}]';
+      if (currencyContext != null &&
+          currencyContext['formattedConverted'] != null) {
+        currentText +=
+            '\n[Info Konversi: ${currencyContext['productName'] ?? 'Pesanan'} seharga ${currencyContext['formattedConverted']}]';
       }
       contents.add({
         'role': 'user',
-        'parts': [{'text': currentText}],
+        'parts': [
+          {'text': currentText},
+        ],
       });
 
       final body = {
         'systemInstruction': {
-          'parts': [{'text': _systemPrompt}],
+          'parts': [
+            {'text': _systemPrompt},
+          ],
         },
         'contents': contents,
-        'generationConfig': {
-          'temperature': 0.7,
-          'maxOutputTokens': 500,
-        },
+        'generationConfig': {'temperature': 0.7, 'maxOutputTokens': 500},
       };
 
       final response = await dio.post(
@@ -403,7 +416,8 @@ PEDOMAN UTAMA:
       } on DioException catch (e) {
         lastDioException = e;
         debugPrint(
-            'SupportChatService DioException on $base: ${e.type} - ${e.message}');
+          'SupportChatService DioException on $base: ${e.type} - ${e.message}',
+        );
         continue;
       } catch (e) {
         debugPrint('SupportChatService Unexpected Error: $e');
@@ -418,14 +432,12 @@ PEDOMAN UTAMA:
       currencyContext: currencyContext,
     );
     if (directGeminiReply != null && directGeminiReply.isNotEmpty) {
-      return SupportChatResult(
-        success: true,
-        reply: directGeminiReply,
-      );
+      return SupportChatResult(success: true, reply: directGeminiReply);
     }
 
     // 3. Fallback jika offline total tanpa koneksi internet sama sekali
-    final offlineReply = currencyContext?['naturalLanguageReply']?.toString() ??
+    final offlineReply =
+        currencyContext?['naturalLanguageReply']?.toString() ??
         _getOfflineQuickReply(message);
 
     return SupportChatResult(

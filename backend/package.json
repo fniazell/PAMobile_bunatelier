@@ -11,7 +11,8 @@
     "test": "tsx --test test/simple_blockchain.test.ts",
     "compile:contracts": "node scripts/compile.js && node scripts/makeTs.js",
     "deploy:sepolia": "tsx scripts/deploySepolia.ts",
-    "deploy:amoy": "tsx scripts/deployAmoy.ts"
+    "deploy:amoy": "tsx scripts/deployAmoy.ts",
+    "check:wallet": "tsx scripts/checkWallet.ts"
   },
   "dependencies": {
     "@google/genai": "^2.30.0",
