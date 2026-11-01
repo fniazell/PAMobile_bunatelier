@@ -1,6 +1,6 @@
 [
   {
-    "id": "e40e62c2-b28f-4abe-908d-b8b12bec664a",
+    "id": "02909bda-4002-4f07-b367-203b274b0a9b",
     "order_id": "ORD-PARALLEL-1",
     "receipt_number": "REC-PAR-1",
     "receipt_data": {
@@ -24,7 +24,7 @@
     "created_at": "2026-10-30T12:00:00.000Z"
   },
   {
-    "id": "0b062f7d-8fce-4198-bc37-142b8d0c8025",
+    "id": "225e4f5a-230e-44c4-9e15-d048b831d720",
     "order_id": "ORD-PARALLEL-2",
     "receipt_number": "REC-PAR-2",
     "receipt_data": {

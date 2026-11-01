@@ -1,0 +1,646 @@
+[
+  {
+    "id": "REC-BA-20261101-E0580707",
+    "receiptId": "REC-BA-20261101-E0580707",
+    "orderId": "BA-20261101-E0580707",
+    "orderNumber": "BA-20261101-E0580707",
+    "customerName": "Pelanggan Bun Atelier",
+    "orderIdHash": "0xad462eec7f3f9e9648d4d920d6356cf9342e4a06621cad025cb4d63103c0b1a2",
+    "receiptHash": "0xf6c8f34b725bde1287ab913e9633112127d8bfb45134af52c4c57e15eed90ab3",
+    "previousReceiptHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "receiptIndex": 0,
+    "network": "Polygon Amoy Testnet",
+    "chainId": 80002,
+    "contractAddress": "0x31609e04652f548403ae87757d509a73beaf48a3",
+    "txHash": "0x3c21a77b73af63535df7c8256f4367812199bdb7dae610d9eaeb41a01d34032e",
+    "blockNumber": 51695178,
+    "status": "CONFIRMED",
+    "createdAt": "2026-11-01T07:22:33.543Z",
+    "canonicalString": "BUN_RECEIPT_V1|BA-20261101-E0580707|PICKUP|out-1|IDR|OG Main Character:1:65000:65000|65000|13000|5200|0|57200|QRIS|PAID",
+    "receiptData": {
+      "orderId": "BA-20261101-E0580707",
+      "orderType": "PICKUP",
+      "branchId": "out-1",
+      "currency": "IDR",
+      "items": [
+        {
+          "name": "OG Main Character",
+          "quantity": 1,
+          "price": 65000,
+          "subtotal": 65000
+        }
+      ],
+      "subtotal": 65000,
+      "discount": 13000,
+      "tax": 5200,
+      "deliveryFee": 0,
+      "total": 57200,
+      "paymentMethod": "QRIS",
+      "paymentStatus": "PAID"
+    },
+    "isSimulated": false,
+    "explorerUrl": "https://amoy.polygonscan.com/tx/0x3c21a77b73af63535df7c8256f4367812199bdb7dae610d9eaeb41a01d34032e"
+  },
+  {
+    "id": "REC-BA-20261101-3E6EC391",
+    "receiptId": "REC-BA-20261101-3E6EC391",
+    "orderId": "BA-20261101-3E6EC391",
+    "orderNumber": "BA-20261101-3E6EC391",
+    "customerName": "zahra",
+    "orderIdHash": "0x2f4d20e783f6242001bf1a22a422cd1be030e1d0abffd87cd6a5e5c5c562f26a",
+    "receiptHash": "0x719413b6843f904b78507a09c39708e9f1c6094a03622883c03309612a23b9f3",
+    "previousReceiptHash": "0xf6c8f34b725bde1287ab913e9633112127d8bfb45134af52c4c57e15eed90ab3",
+    "receiptIndex": 1,
+    "network": "Polygon Amoy Testnet",
+    "chainId": 80002,
+    "contractAddress": "0x31609e04652f548403ae87757d509a73beaf48a3",
+    "txHash": "0x4c2c98f872755d2cf951fd778c9618a0e048f7149db6c00928e9b227ae72fdfc",
+    "blockNumber": 51695256,
+    "status": "CONFIRMED",
+    "createdAt": "2026-11-01T07:23:51.191Z",
+    "canonicalString": "BUN_RECEIPT_V1|BA-20261101-3E6EC391|PICKUP|out-1|IDR|Crunch Culture:1:0:0;Delulu Deluxe:1:0:0|154000|0|15400|0|169400|EWALLET|PAID",
+    "receiptData": {
+      "orderId": "BA-20261101-3E6EC391",
+      "orderType": "PICKUP",
+      "branchId": "out-1",
+      "currency": "IDR",
+      "items": [
+        {
+          "name": "Crunch Culture",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        },
+        {
+          "name": "Delulu Deluxe",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        }
+      ],
+      "subtotal": 154000,
+      "discount": 0,
+      "tax": 15400,
+      "deliveryFee": 0,
+      "total": 169400,
+      "paymentMethod": "EWALLET",
+      "paymentStatus": "PAID"
+    },
+    "isSimulated": false,
+    "explorerUrl": "https://amoy.polygonscan.com/tx/0x4c2c98f872755d2cf951fd778c9618a0e048f7149db6c00928e9b227ae72fdfc"
+  },
+  {
+    "id": "REC-BA-20261101-406F4005",
+    "receiptId": "REC-BA-20261101-406F4005",
+    "orderId": "BA-20261101-406F4005",
+    "orderNumber": "BA-20261101-406F4005",
+    "customerName": "zahra",
+    "orderIdHash": "0x84c1eb7ca08471c29839dca5732b941a5c551dcaeedc8dd8961267aff9c69df5",
+    "receiptHash": "0x381eb747f60e5b367d55611f32d295543d9a292f90ad00cf1d711acc0f08ddad",
+    "previousReceiptHash": "0x719413b6843f904b78507a09c39708e9f1c6094a03622883c03309612a23b9f3",
+    "receiptIndex": 2,
+    "network": "Polygon Amoy Testnet",
+    "chainId": 80002,
+    "contractAddress": "0x31609e04652f548403ae87757d509a73beaf48a3",
+    "txHash": "0xe2058cf903e48830ba39bca5697c83b634f151dc0288e6dbdcd7d2f7c8d78baa",
+    "blockNumber": 51695262,
+    "status": "CONFIRMED",
+    "createdAt": "2026-11-01T07:23:57.846Z",
+    "canonicalString": "BUN_RECEIPT_V1|BA-20261101-406F4005|PICKUP|out-1|IDR|OG Main Character:1:0:0|65000|0|6500|0|71500|EWALLET|PAID",
+    "receiptData": {
+      "orderId": "BA-20261101-406F4005",
+      "orderType": "PICKUP",
+      "branchId": "out-1",
+      "currency": "IDR",
+      "items": [
+        {
+          "name": "OG Main Character",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        }
+      ],
+      "subtotal": 65000,
+      "discount": 0,
+      "tax": 6500,
+      "deliveryFee": 0,
+      "total": 71500,
+      "paymentMethod": "EWALLET",
+      "paymentStatus": "PAID"
+    },
+    "isSimulated": false,
+    "explorerUrl": "https://amoy.polygonscan.com/tx/0xe2058cf903e48830ba39bca5697c83b634f151dc0288e6dbdcd7d2f7c8d78baa"
+  },
+  {
+    "id": "REC-BA-20261101-76746FA2",
+    "receiptId": "REC-BA-20261101-76746FA2",
+    "orderId": "BA-20261101-76746FA2",
+    "orderNumber": "BA-20261101-76746FA2",
+    "customerName": "azel",
+    "orderIdHash": "0x8f627d60eaf9af996bea590fe79c3d3761c8358aa59de9dd33cea2db7164f9b6",
+    "receiptHash": "0x20f71e70dea1eb5eaa727cfec491e387b9d12c23259089df543caca096b0719e",
+    "previousReceiptHash": "0x381eb747f60e5b367d55611f32d295543d9a292f90ad00cf1d711acc0f08ddad",
+    "receiptIndex": 3,
+    "network": "Polygon Amoy Testnet",
+    "chainId": 80002,
+    "contractAddress": "0x31609e04652f548403ae87757d509a73beaf48a3",
+    "txHash": "0x15de1b015ad3b7cdc072ef62ca98b7f672003151100d16670fc0a1d8d7817bfa",
+    "blockNumber": 51695269,
+    "status": "CONFIRMED",
+    "createdAt": "2026-11-01T07:24:04.526Z",
+    "canonicalString": "BUN_RECEIPT_V1|BA-20261101-76746FA2|PICKUP|out-1|IDR|Hot Mess Express:1:0:0|72000|0|7200|0|79200|EWALLET|PAID",
+    "receiptData": {
+      "orderId": "BA-20261101-76746FA2",
+      "orderType": "PICKUP",
+      "branchId": "out-1",
+      "currency": "IDR",
+      "items": [
+        {
+          "name": "Hot Mess Express",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        }
+      ],
+      "subtotal": 72000,
+      "discount": 0,
+      "tax": 7200,
+      "deliveryFee": 0,
+      "total": 79200,
+      "paymentMethod": "EWALLET",
+      "paymentStatus": "PAID"
+    },
+    "isSimulated": false,
+    "explorerUrl": "https://amoy.polygonscan.com/tx/0x15de1b015ad3b7cdc072ef62ca98b7f672003151100d16670fc0a1d8d7817bfa"
+  },
+  {
+    "id": "REC-BA-20261030-0C275466",
+    "receiptId": "REC-BA-20261030-0C275466",
+    "orderId": "BA-20261030-0C275466",
+    "orderNumber": "BA-20261030-0C275466",
+    "customerName": "tasya",
+    "orderIdHash": "0x459a03d6c446767af21a04dae0f4db7146756b828e72374455b0cf698ca9f7ad",
+    "receiptHash": "0xf6e72d6c606d7465042a948d38d0e5703765eef80f0aaad9277623180145a401",
+    "previousReceiptHash": "0x20f71e70dea1eb5eaa727cfec491e387b9d12c23259089df543caca096b0719e",
+    "receiptIndex": 4,
+    "network": "Polygon Amoy Testnet",
+    "chainId": 80002,
+    "contractAddress": "0x31609e04652f548403ae87757d509a73beaf48a3",
+    "txHash": "0x7c20930f02cb6ac50d937fb08e870c93564bb8ed161b91a577c1d48de58acd16",
+    "blockNumber": 51695276,
+    "status": "CONFIRMED",
+    "createdAt": "2026-11-01T07:24:11.377Z",
+    "canonicalString": "BUN_RECEIPT_V1|BA-20261030-0C275466|PICKUP|out-7|IDR|Atelier Berry Slushie:1:0:0;Belgian Waffle Ice Cream:1:0:0;Hot Mess Express:1:0:0;OG Main Character:1:0:0;Vintage Root Beer Float:1:0:0|242000|48400|19360|0|212960|QRIS|PAID",
+    "receiptData": {
+      "orderId": "BA-20261030-0C275466",
+      "orderType": "PICKUP",
+      "branchId": "out-7",
+      "currency": "IDR",
+      "items": [
+        {
+          "name": "Atelier Berry Slushie",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        },
+        {
+          "name": "Vintage Root Beer Float",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        },
+        {
+          "name": "Belgian Waffle Ice Cream",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        },
+        {
+          "name": "OG Main Character",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        },
+        {
+          "name": "Hot Mess Express",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        }
+      ],
+      "subtotal": 242000,
+      "discount": 48400,
+      "tax": 19360,
+      "deliveryFee": 0,
+      "total": 212960,
+      "paymentMethod": "QRIS",
+      "paymentStatus": "PAID"
+    },
+    "isSimulated": false,
+    "explorerUrl": "https://amoy.polygonscan.com/tx/0x7c20930f02cb6ac50d937fb08e870c93564bb8ed161b91a577c1d48de58acd16"
+  },
+  {
+    "id": "REC-BA-20261030-7E1D0413-0B1C-4909-8232-A403E20686B5",
+    "receiptId": "REC-BA-20261030-7E1D0413-0B1C-4909-8232-A403E20686B5",
+    "orderId": "BA-20261030-7E1D0413-0B1C-4909-8232-A403E20686B5",
+    "orderNumber": "BA-20261030-7E1D0413-0B1C-4909-8232-A403E20686B5",
+    "customerName": "ta",
+    "orderIdHash": "0x4351c5e9de4a3d7c35daa5b751ac874c98f979feade0892d97f016f5eeed6f05",
+    "receiptHash": "0xb83f8ea56db6737a649692f2ee4c3e3060470206252c289769a7d4d45c6c196a",
+    "previousReceiptHash": "0xf6e72d6c606d7465042a948d38d0e5703765eef80f0aaad9277623180145a401",
+    "receiptIndex": 5,
+    "network": "Polygon Amoy Testnet",
+    "chainId": 80002,
+    "contractAddress": "0x31609e04652f548403ae87757d509a73beaf48a3",
+    "txHash": "0x995fc2f7bcfdcbe451fd8f700f3447cc259496ffb8ebed46cf1d069e6151a05d",
+    "blockNumber": 51695283,
+    "status": "CONFIRMED",
+    "createdAt": "2026-11-01T07:24:17.956Z",
+    "canonicalString": "BUN_RECEIPT_V1|BA-20261030-7E1D0413-0B1C-4909-8232-A403E20686B5|PICKUP|out-3|GBP|OG Main Character:1:0:0;Smoked Bacon & Brie Croissant:1:0:0|141000|28200|11280|0|124080|EWALLET|PAID",
+    "receiptData": {
+      "orderId": "BA-20261030-7E1D0413-0B1C-4909-8232-A403E20686B5",
+      "orderType": "PICKUP",
+      "branchId": "out-3",
+      "currency": "GBP",
+      "items": [
+        {
+          "name": "OG Main Character",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        },
+        {
+          "name": "Smoked Bacon & Brie Croissant",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        }
+      ],
+      "subtotal": 141000,
+      "discount": 28200,
+      "tax": 11280,
+      "deliveryFee": 0,
+      "total": 124080,
+      "paymentMethod": "EWALLET",
+      "paymentStatus": "PAID"
+    },
+    "isSimulated": false,
+    "explorerUrl": "https://amoy.polygonscan.com/tx/0x995fc2f7bcfdcbe451fd8f700f3447cc259496ffb8ebed46cf1d069e6151a05d"
+  },
+  {
+    "id": "REC-BA-20261030-25B29725-2E5D-4606-99D1-31A027A0C339",
+    "receiptId": "REC-BA-20261030-25B29725-2E5D-4606-99D1-31A027A0C339",
+    "orderId": "BA-20261030-25B29725-2E5D-4606-99D1-31A027A0C339",
+    "orderNumber": "BA-20261030-25B29725-2E5D-4606-99D1-31A027A0C339",
+    "customerName": "ta",
+    "orderIdHash": "0x5becbef0f8a92b8a5d99093929c5b5f949a32e7c27209ad0fc930de608a6e74d",
+    "receiptHash": "0x46310612a0686fae01a51c95a491e1c346e09ed378e94f8f9e91dd8882040654",
+    "previousReceiptHash": "0xb83f8ea56db6737a649692f2ee4c3e3060470206252c289769a7d4d45c6c196a",
+    "receiptIndex": 6,
+    "network": "Polygon Amoy Testnet",
+    "chainId": 80002,
+    "contractAddress": "0x31609e04652f548403ae87757d509a73beaf48a3",
+    "txHash": "0xfa08705a8e77522dc9deff974dd51a926e9f6b675cf61e9ef251557b328e69e7",
+    "blockNumber": 51695290,
+    "status": "CONFIRMED",
+    "createdAt": "2026-11-01T07:24:24.671Z",
+    "canonicalString": "BUN_RECEIPT_V1|BA-20261030-25B29725-2E5D-4606-99D1-31A027A0C339|PICKUP|out-3|GBP|Dr Pepper:1:0:0;Fluffy Souffle Pancake:1:0:0;Smoky Buffalo Chicken Wings:1:0:0|115000|17250|9775|0|107525|QRIS|PAID",
+    "receiptData": {
+      "orderId": "BA-20261030-25B29725-2E5D-4606-99D1-31A027A0C339",
+      "orderType": "PICKUP",
+      "branchId": "out-3",
+      "currency": "GBP",
+      "items": [
+        {
+          "name": "Fluffy Souffle Pancake",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        },
+        {
+          "name": "Dr Pepper",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        },
+        {
+          "name": "Smoky Buffalo Chicken Wings",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        }
+      ],
+      "subtotal": 115000,
+      "discount": 17250,
+      "tax": 9775,
+      "deliveryFee": 0,
+      "total": 107525,
+      "paymentMethod": "QRIS",
+      "paymentStatus": "PAID"
+    },
+    "isSimulated": false,
+    "explorerUrl": "https://amoy.polygonscan.com/tx/0xfa08705a8e77522dc9deff974dd51a926e9f6b675cf61e9ef251557b328e69e7"
+  },
+  {
+    "id": "REC-BA-20261030-88C3BFA4-5548-437C-A43C-C611BAC6EE3B",
+    "receiptId": "REC-BA-20261030-88C3BFA4-5548-437C-A43C-C611BAC6EE3B",
+    "orderId": "BA-20261030-88C3BFA4-5548-437C-A43C-C611BAC6EE3B",
+    "orderNumber": "BA-20261030-88C3BFA4-5548-437C-A43C-C611BAC6EE3B",
+    "customerName": "ta",
+    "orderIdHash": "0x81aac2f8206680ed457dc948dc33c9d65ddb24054c5a56db2dc54c7551dc427f",
+    "receiptHash": "0xbcaba63f1e1b8288a5e518fa11b86bd2bffe3ac93ef3f1036486c86b178db0b9",
+    "previousReceiptHash": "0x46310612a0686fae01a51c95a491e1c346e09ed378e94f8f9e91dd8882040654",
+    "receiptIndex": 7,
+    "network": "Bun Atelier Blockchain Ledger",
+    "chainId": 80002,
+    "contractAddress": "0x31609e04652f548403ae87757d509a73beaf48a3",
+    "txHash": "0x8f8075ab3c8e27c0b269acda63ff8b311205d3f8cc58b1a0cbbc4fcf2dd7a426",
+    "blockNumber": 7,
+    "status": "CONFIRMED",
+    "createdAt": "2026-11-01T07:24:31.682Z",
+    "canonicalString": "BUN_RECEIPT_V1|BA-20261030-88C3BFA4-5548-437C-A43C-C611BAC6EE3B|PICKUP|out-3|GBP|OG Main Character:1:0:0|65000|0|6500|0|71500|CASHIER|PENDING",
+    "receiptData": {
+      "orderId": "BA-20261030-88C3BFA4-5548-437C-A43C-C611BAC6EE3B",
+      "orderType": "PICKUP",
+      "branchId": "out-3",
+      "currency": "GBP",
+      "items": [
+        {
+          "name": "OG Main Character",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        }
+      ],
+      "subtotal": 65000,
+      "discount": 0,
+      "tax": 6500,
+      "deliveryFee": 0,
+      "total": 71500,
+      "paymentMethod": "CASHIER",
+      "paymentStatus": "PENDING"
+    },
+    "isSimulated": false
+  },
+  {
+    "id": "REC-BA-20261030-42131F4C-E5CD-4DF6-8C18-69BA5E5CFA31",
+    "receiptId": "REC-BA-20261030-42131F4C-E5CD-4DF6-8C18-69BA5E5CFA31",
+    "orderId": "BA-20261030-42131F4C-E5CD-4DF6-8C18-69BA5E5CFA31",
+    "orderNumber": "BA-20261030-42131F4C-E5CD-4DF6-8C18-69BA5E5CFA31",
+    "customerName": "ta",
+    "orderIdHash": "0xf364b56925a1a1acc0ab8c00765515f4199eee929db35428ca143fda9f462fbd",
+    "receiptHash": "0x5e058a7d8a57c6407026577912b24eda4ba998a565e3f64b8cfe7ba7c7382eb4",
+    "previousReceiptHash": "0xbcaba63f1e1b8288a5e518fa11b86bd2bffe3ac93ef3f1036486c86b178db0b9",
+    "receiptIndex": 8,
+    "network": "Bun Atelier Blockchain Ledger",
+    "chainId": 80002,
+    "contractAddress": "0x31609e04652f548403ae87757d509a73beaf48a3",
+    "txHash": "0xb220274d24f335c5e2f64d47bc5e886980e0635875b1fde6d3af3f04eaf8e781",
+    "blockNumber": 8,
+    "status": "CONFIRMED",
+    "createdAt": "2026-11-01T07:24:31.686Z",
+    "canonicalString": "BUN_RECEIPT_V1|BA-20261030-42131F4C-E5CD-4DF6-8C18-69BA5E5CFA31|PICKUP|out-3|GBP|Hot Mess Express:1:0:0;OG Main Character:1:0:0|137000|6850|13015|0|143165|CASHIER|PENDING",
+    "receiptData": {
+      "orderId": "BA-20261030-42131F4C-E5CD-4DF6-8C18-69BA5E5CFA31",
+      "orderType": "PICKUP",
+      "branchId": "out-3",
+      "currency": "GBP",
+      "items": [
+        {
+          "name": "OG Main Character",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        },
+        {
+          "name": "Hot Mess Express",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        }
+      ],
+      "subtotal": 137000,
+      "discount": 6850,
+      "tax": 13015,
+      "deliveryFee": 0,
+      "total": 143165,
+      "paymentMethod": "CASHIER",
+      "paymentStatus": "PENDING"
+    },
+    "isSimulated": false
+  },
+  {
+    "id": "REC-BA-20261030-020",
+    "receiptId": "REC-BA-20261030-020",
+    "orderId": "BA-20261030-020",
+    "orderNumber": "BA-20261030-020",
+    "customerName": "Pelanggan Bun Atelier",
+    "orderIdHash": "0x4c295ad450c58b2342783ce985e59affdda0d450d1b6cddda2b8364d67388e52",
+    "receiptHash": "0x3ac87be04b5583d4ccdd62f70d4a47029b83fa1a16ea5fa35685e3334bdd7948",
+    "previousReceiptHash": "0x5e058a7d8a57c6407026577912b24eda4ba998a565e3f64b8cfe7ba7c7382eb4",
+    "receiptIndex": 9,
+    "network": "Polygon Amoy Testnet",
+    "chainId": 80002,
+    "contractAddress": "0x31609e04652f548403ae87757d509a73beaf48a3",
+    "txHash": "0x520af7f6523ec0136d7269d1f215eeea42548748ba7ebf7a0a02d14f23008e24",
+    "blockNumber": 51695296,
+    "status": "CONFIRMED",
+    "createdAt": "2026-11-01T07:24:31.687Z",
+    "canonicalString": "BUN_RECEIPT_V1|BA-20261030-020|PICKUP|out-1|IDR|Atelier Berry Slushie:1:0:0;Belgian Waffle Ice Cream:1:0:0;Crispy Chicken Avocado Croissant Burger:1:0:0;Crunch Culture:1:0:0;Delulu Deluxe:1:0:0;OG Main Character:1:0:0;Truffle Mac n Cheese:1:0:0;Vintage Root Beer Float:1:0:0|428000|64200|36380|0|400180|QRIS|PAID",
+    "receiptData": {
+      "orderId": "BA-20261030-020",
+      "orderType": "PICKUP",
+      "branchId": "out-1",
+      "currency": "IDR",
+      "items": [
+        {
+          "name": "OG Main Character",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        },
+        {
+          "name": "Crunch Culture",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        },
+        {
+          "name": "Delulu Deluxe",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        },
+        {
+          "name": "Crispy Chicken Avocado Croissant Burger",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        },
+        {
+          "name": "Truffle Mac n Cheese",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        },
+        {
+          "name": "Atelier Berry Slushie",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        },
+        {
+          "name": "Vintage Root Beer Float",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        },
+        {
+          "name": "Belgian Waffle Ice Cream",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        }
+      ],
+      "subtotal": 428000,
+      "discount": 64200,
+      "tax": 36380,
+      "deliveryFee": 0,
+      "total": 400180,
+      "paymentMethod": "QRIS",
+      "paymentStatus": "PAID"
+    },
+    "isSimulated": false,
+    "explorerUrl": "https://amoy.polygonscan.com/tx/0x520af7f6523ec0136d7269d1f215eeea42548748ba7ebf7a0a02d14f23008e24"
+  },
+  {
+    "id": "REC-BA-20261030-019",
+    "receiptId": "REC-BA-20261030-019",
+    "orderId": "BA-20261030-019",
+    "orderNumber": "BA-20261030-019",
+    "customerName": "Pelanggan Bun Atelier",
+    "orderIdHash": "0x0af5f840aada92f0f42518b34f9b131dd94ba104859bb26be70812e4ddf39657",
+    "receiptHash": "0x531510887033bd146d77bf202fea55b344e80ca9b64fe49de4e650089e11d855",
+    "previousReceiptHash": "0x3ac87be04b5583d4ccdd62f70d4a47029b83fa1a16ea5fa35685e3334bdd7948",
+    "receiptIndex": 10,
+    "network": "Polygon Amoy Testnet",
+    "chainId": 80002,
+    "contractAddress": "0x31609e04652f548403ae87757d509a73beaf48a3",
+    "txHash": "0xf646746593360672b93a762199422ed5b798718640ef8fc94d870eb9b76d58a6",
+    "blockNumber": 51695303,
+    "status": "CONFIRMED",
+    "createdAt": "2026-11-01T07:24:38.335Z",
+    "canonicalString": "BUN_RECEIPT_V1|BA-20261030-019|PICKUP|out-1|IDR|Delulu Deluxe:1:0:0;Slay Bacon:1:0:0|174000|26100|14790|0|162690|QRIS|PAID",
+    "receiptData": {
+      "orderId": "BA-20261030-019",
+      "orderType": "PICKUP",
+      "branchId": "out-1",
+      "currency": "IDR",
+      "items": [
+        {
+          "name": "Slay Bacon",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        },
+        {
+          "name": "Delulu Deluxe",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        }
+      ],
+      "subtotal": 174000,
+      "discount": 26100,
+      "tax": 14790,
+      "deliveryFee": 0,
+      "total": 162690,
+      "paymentMethod": "QRIS",
+      "paymentStatus": "PAID"
+    },
+    "isSimulated": false,
+    "explorerUrl": "https://amoy.polygonscan.com/tx/0xf646746593360672b93a762199422ed5b798718640ef8fc94d870eb9b76d58a6"
+  },
+  {
+    "id": "REC-BA-20261030-015",
+    "receiptId": "REC-BA-20261030-015",
+    "orderId": "BA-20261030-015",
+    "orderNumber": "BA-20261030-015",
+    "customerName": "Pelanggan Bun Atelier",
+    "orderIdHash": "0x45cb887705e697f3db785c09ef30206dfc1730b09fe7398ebd22b5547ef33985",
+    "receiptHash": "0xb8220b762abbe7397438f15afc00ae9bccf96a0c4cf472de6cb17cf635a52970",
+    "previousReceiptHash": "0x531510887033bd146d77bf202fea55b344e80ca9b64fe49de4e650089e11d855",
+    "receiptIndex": 11,
+    "network": "Bun Atelier Blockchain Ledger",
+    "chainId": 80002,
+    "contractAddress": "0x31609e04652f548403ae87757d509a73beaf48a3",
+    "txHash": "0x2a9c97c737b1b63e01b5fff40ca35d1d300891a5ec86168ed3b1e92c9b06a0f5",
+    "blockNumber": 11,
+    "status": "CONFIRMED",
+    "createdAt": "2026-11-01T07:24:49.853Z",
+    "canonicalString": "BUN_RECEIPT_V1|BA-20261030-015|PICKUP|out-1|IDR|OG Main Character:1:0:0|65000|0|6500|0|71500|CASHIER|PENDING",
+    "receiptData": {
+      "orderId": "BA-20261030-015",
+      "orderType": "PICKUP",
+      "branchId": "out-1",
+      "currency": "IDR",
+      "items": [
+        {
+          "name": "OG Main Character",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        }
+      ],
+      "subtotal": 65000,
+      "discount": 0,
+      "tax": 6500,
+      "deliveryFee": 0,
+      "total": 71500,
+      "paymentMethod": "CASHIER",
+      "paymentStatus": "PENDING"
+    },
+    "isSimulated": false
+  },
+  {
+    "id": "REC-BA-20261027-008",
+    "receiptId": "REC-BA-20261027-008",
+    "orderId": "BA-20261027-008",
+    "orderNumber": "BA-20261027-008",
+    "customerName": "Pelanggan Bun Atelier",
+    "orderIdHash": "0x8693ea14267828afa7bac3cdf2e751bcd5af841c8d355f8aba8c4739c64a50a1",
+    "receiptHash": "0x2013f28a81ec20763499c8c4e5415bc6321582df0e33238647be550b57276e00",
+    "previousReceiptHash": "0xb8220b762abbe7397438f15afc00ae9bccf96a0c4cf472de6cb17cf635a52970",
+    "receiptIndex": 12,
+    "network": "Bun Atelier Blockchain Ledger",
+    "chainId": 80002,
+    "contractAddress": "0x31609e04652f548403ae87757d509a73beaf48a3",
+    "txHash": "0xe16fcd00557eba8b2d7a9aebbab4cec63ed30a1ef09a67b5bc5841d80bc23fee",
+    "blockNumber": 12,
+    "status": "CONFIRMED",
+    "createdAt": "2026-11-01T07:24:59.431Z",
+    "canonicalString": "BUN_RECEIPT_V1|BA-20261027-008|PICKUP|out-4|IDR|OG Main Character:1:0:0|65000|0|6500|0|71500|CASHIER|PENDING",
+    "receiptData": {
+      "orderId": "BA-20261027-008",
+      "orderType": "PICKUP",
+      "branchId": "out-4",
+      "currency": "IDR",
+      "items": [
+        {
+          "name": "OG Main Character",
+          "quantity": 1,
+          "price": 0,
+          "subtotal": 0
+        }
+      ],
+      "subtotal": 65000,
+      "discount": 0,
+      "tax": 6500,
+      "deliveryFee": 0,
+      "total": 71500,
+      "paymentMethod": "CASHIER",
+      "paymentStatus": "PENDING"
+    },
+    "isSimulated": false
+  }
+]

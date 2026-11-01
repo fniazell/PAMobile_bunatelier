@@ -506,6 +506,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
                       foregroundColor:
                           isConfirmed ? AppColors.white : AppColors.mutedText,
                       elevation: isConfirmed ? 2 : 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -528,16 +529,20 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
                                 : Icons.lock_outline_rounded,
                             size: 22,
                           ),
-                    label: Text(
-                      _isDownloading
-                          ? 'MENYIMPAN KE GALERI...'
-                          : (isConfirmed
-                              ? 'DOWNLOAD E-RECEIPT (SIMPAN KE GALERI)'
-                              : 'E-RECEIPT BELUM TERSEDIA'),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 13,
-                        letterSpacing: 0.5,
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        _isDownloading
+                            ? 'MENYIMPAN KE GALERI...'
+                            : (isConfirmed
+                                ? 'DOWNLOAD E-RECEIPT (SIMPAN KE GALERI)'
+                                : 'E-RECEIPT BELUM TERSEDIA'),
+                        maxLines: 1,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12.5,
+                          letterSpacing: 0.3,
+                        ),
                       ),
                     ),
                   ),

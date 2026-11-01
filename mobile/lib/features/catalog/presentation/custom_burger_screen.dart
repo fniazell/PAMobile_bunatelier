@@ -423,10 +423,15 @@ class _CustomBurgerScreenState extends ConsumerState<CustomBurgerScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
-                              'ADD TO BAG',
-                              style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Colors.white),
+                            const Expanded(
+                              child: Text(
+                                'ADD TO BAG',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Colors.white),
+                              ),
                             ),
+                            const SizedBox(width: 8),
                             Text(
                               'Rp${totalPrice.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
                               style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),

@@ -372,11 +372,20 @@ export class BlockchainService {
       try {
         console.log(`[BlockchainService] Submitting receipt to ${this.getNetworkName()}: Order=${cleanOrderId}, ReceiptHash=${receiptHash}`);
         
+        // Pastikan previousReceiptHash selalu sesuai dengan state on-chain kontrak
+        let effectivePrevHash = previousReceiptHash;
+        try {
+          const onChainLatest = await this.contract.latestReceiptHash();
+          if (onChainLatest) {
+            effectivePrevHash = onChainLatest;
+          }
+        } catch (_) {}
+
         // Panggil method smart contract sungguhan
         const tx = await this.contract.recordReceipt(
           orderIdHash,
           receiptHash,
-          previousReceiptHash
+          effectivePrevHash
         );
 
         console.log(`[BlockchainService] Tx submitted! Hash: ${tx.hash}. Waiting for 1 block confirmation...`);
@@ -492,21 +501,6 @@ export class BlockchainService {
       blockNumber: nextIndex,
       timestamp: nowIso,
       isSimulated: false,
-    };
-      success: true,
-      orderId: cleanOrderId,
-      orderIdHash,
-      receiptHash,
-      previousReceiptHash,
-      receiptIndex: nextIndex,
-      network: this.getNetworkName(),
-      chainId: this.chainId,
-      contractAddress: 'NOT_CONFIGURED',
-      txHash: '',
-      blockNumber: 0,
-      timestamp: nowIso,
-      isSimulated: false,
-      explorerUrl: undefined,
     };
   }
 

@@ -451,18 +451,23 @@ class _AiBurgerDetailScreenState extends ConsumerState<AiBurgerDetailScreen> {
                           child: ElevatedButton.icon(
                             onPressed: () => _handleAddToCart(product),
                             icon: const Icon(Icons.shopping_bag_outlined, size: 18, color: Colors.white),
-                            label: Text(
-                              'ADD TO CART • ${_formatPrice(product.price * _quantity)}',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.8,
-                                color: Colors.white,
+                            label: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                'ADD TO CART • ${_formatPrice(product.price * _quantity)}',
+                                maxLines: 1,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.5,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFA62B2B),
                               elevation: 2,
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),

@@ -477,16 +477,21 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                product.isOutOfStock ? 'STOK HABIS (SOLD OUT)' : 'ADD TO CART',
-                                style: GoogleFonts.dmSans(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                  letterSpacing: 1.0,
+                              Expanded(
+                                child: Text(
+                                  product.isOutOfStock ? 'STOK HABIS (SOLD OUT)' : 'ADD TO CART',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.dmSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                    letterSpacing: 1.0,
+                                  ),
                                 ),
                               ),
-                              if (!product.isOutOfStock)
+                              if (!product.isOutOfStock) ...[
+                                const SizedBox(width: 8),
                                 Text(
                                   'RP $currentTotal',
                                   style: GoogleFonts.dmSans(
@@ -495,6 +500,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                     color: Colors.white,
                                   ),
                                 ),
+                              ],
                             ],
                           ),
                         ),
