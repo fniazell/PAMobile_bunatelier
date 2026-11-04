@@ -10,6 +10,7 @@ import 'package:mobile/features/checkout/presentation/widgets/checkout_currency_
 import 'package:mobile/features/converter/services/currency_service.dart';
 import 'package:mobile/features/orders/models/order_model.dart';
 import 'package:mobile/features/orders/presentation/orders_screen.dart';
+import 'package:mobile/features/orders/providers/orders_provider.dart';
 import 'package:mobile/features/orders/services/receipt_download_service.dart';
 
 void main() {
@@ -457,8 +458,25 @@ void main() {
       tester.view.devicePixelRatio = 2.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
+      final sampleOrder = OrderItemModel(
+        id: 'ord-receipt-test',
+        orderNumber: 'BA-20261104-001',
+        createdAt: DateTime.now(),
+        orderType: 'PICKUP',
+        paymentMethod: 'QRIS',
+        paymentStatus: 'PAID',
+        status: 'CONFIRMED',
+        subtotal: 100000,
+        tax: 10000,
+        total: 110000,
+        itemsSummary: '1x Truffle Burger',
+      );
+
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [
+            ordersProvider.overrideWith((ref) => _MockOrdersNotifier([sampleOrder])),
+          ],
           child: MaterialApp(
             theme: AppTheme.lightTheme,
             home: const OrdersScreen(),
@@ -472,4 +490,11 @@ void main() {
       expect(find.text('Lihat & Unduh E-Receipt'), findsWidgets);
     });
   });
+}
+
+class _MockOrdersNotifier extends OrdersNotifier {
+  final List<OrderItemModel> initialOrders;
+  _MockOrdersNotifier(this.initialOrders) : super(null) {
+    state = OrdersState(orders: initialOrders);
+  }
 }

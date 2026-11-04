@@ -1,5 +1,9 @@
 import 'dart:convert';
+
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../core/storage/secure_storage_service.dart';
 import '../../data/remote/supabase_service.dart';
 
@@ -22,24 +26,52 @@ bool verifyPassword(String plainPassword, String storedHash) =>
 
 // ─── Result types ─────────────────────────────────────────────────────────────
 
-enum RegisterResult { success, emailAlreadyExists, validationError }
-enum LoginResult { success, emailNotFound, wrongPassword, validationError }
+enum RegisterResult {
+  success,
+  emailConfirmationRequired,
+  emailAlreadyExists,
+  validationError,
+  serviceError,
+}
 
-enum UpdateProfileResult { success, usernameTaken, usernameCooldown, validationError, notFound }
-enum EmailChangeResult { success, wrongPassword, emailTaken, validationError, notFound }
+enum LoginResult {
+  success,
+  invalidEmailFormat,
+  emailNotFound,
+  emailNotConfirmed,
+  wrongPassword,
+  validationError,
+  serviceError,
+}
+
+enum UpdateProfileResult {
+  success,
+  usernameTaken,
+  usernameCooldown,
+  validationError,
+  notFound,
+}
+
+enum EmailChangeResult {
+  success,
+  wrongPassword,
+  emailTaken,
+  validationError,
+  notFound,
+}
 
 // ─── AccountRecord ────────────────────────────────────────────────────────────
 
 class AccountRecord {
   final String id;
   final String fullName;
-  final String email;          // always normalised
+  final String email; // always normalised
   final String role;
   final String passwordHash;
-  final String username;       // always normalised (lowercase)
+  final String username; // always normalised (lowercase)
   final DateTime? usernameChangedAt; // null = never changed
-  final String phone;          // E.164-ish (+62…), may be empty
-  final String? avatarPath;    // local file path, null = no photo
+  final String phone; // E.164-ish (+62…), may be empty
+  final String? avatarPath; // local file path, null = no photo
 
   const AccountRecord({
     required this.id,
@@ -156,7 +188,7 @@ class AuthService {
       id: 'usr-admin-02',
       username: 'fania.admin',
       email: 'fania.admin@bunatelier.com',
-      password: '12424161',
+      password: '124240161',
       fullName: 'Fania (Administrator)',
       phone: '+6281288882728',
     ),
@@ -164,7 +196,7 @@ class AuthService {
       id: 'usr-admin-03',
       username: 'azzahra.admin',
       email: 'azzahra.admin@bunatelier.com',
-      password: '124240176',
+      password: '124240171',
       fullName: 'Azzahra (Administrator)',
       phone: '+6281288882729',
     ),
@@ -191,7 +223,9 @@ class AuthService {
       final adminNormEmail = admin.email.toLowerCase();
 
       final adminIndex = records.indexWhere(
-        (a) => a.username.toLowerCase() == adminNormUser || a.email.toLowerCase() == adminNormEmail,
+        (a) =>
+            a.username.toLowerCase() == adminNormUser ||
+            a.email.toLowerCase() == adminNormEmail,
       );
 
       final desiredHash = hashPassword(admin.password);
@@ -225,20 +259,6 @@ class AuthService {
 
     if (changed) {
       await _saveAccounts(records);
-    }
-
-    // Auto-sync customer accounts to Supabase Cloud in background
-    for (final acc in records) {
-      if (acc.role.toLowerCase() != 'admin') {
-        SupabaseService.instance.syncUserToCloud(
-          id: acc.id,
-          fullName: acc.fullName,
-          email: acc.email,
-          role: acc.role,
-          username: acc.username,
-          phone: acc.phone,
-        );
-      }
     }
 
     return records;
@@ -329,7 +349,9 @@ class AuthService {
     final normEmail = normalizeEmail(email);
     final trimmedPw = password.trim();
 
-    if (trimmedName.isEmpty || normEmail.isEmpty || trimmedPw.length < 6) {
+    if (trimmedName.isEmpty ||
+        !isValidEmail(normEmail) ||
+        trimmedPw.length < 6) {
       return RegisterResult.validationError;
     }
 
@@ -346,35 +368,51 @@ class AuthService {
       return RegisterResult.emailAlreadyExists;
     }
 
-    final newId = 'usr-${DateTime.now().millisecondsSinceEpoch}';
-    // Role pendaftar baru selalu CUSTOMER (tidak dapat mendaftar sebagai admin)
-    const role = 'CUSTOMER';
+    try {
+      final accounts = await _getAccounts();
+      final username = _generateUsername(normEmail, accounts);
+      final response = await SupabaseService.instance.client.auth.signUp(
+        email: normEmail,
+        password: trimmedPw,
+        data: {
+          'full_name': trimmedName,
+          'username': username,
+          'role': 'CUSTOMER',
+        },
+      );
+      final user = response.user;
+      if (user == null) return RegisterResult.serviceError;
 
-    final accounts = await _getAccounts();
-    final username = _generateUsername(normEmail, accounts);
+      final account = AccountRecord(
+        id: user.id,
+        fullName: trimmedName,
+        email: normEmail,
+        role: 'CUSTOMER',
+        passwordHash: '',
+        username: username,
+      );
+      await _saveAccount(account);
 
-    final record = AccountRecord(
-      id: newId,
-      fullName: trimmedName,
-      email: normEmail,
-      role: role,
-      passwordHash: hashPassword(trimmedPw),
-      username: username,
-    );
+      final accessToken = response.session?.accessToken;
+      if (accessToken != null) {
+        await _syncAccount(account, accessToken);
+        return RegisterResult.success;
+      }
 
-    accounts.add(record);
-    await _saveAccounts(accounts);
-
-    // Sinkronkan akun baru ke database online Supabase Cloud
-    SupabaseService.instance.syncUserToCloud(
-      id: newId,
-      fullName: trimmedName,
-      email: normEmail,
-      role: role,
-      username: username,
-    );
-
-    return RegisterResult.success;
+      return RegisterResult.emailConfirmationRequired;
+    } on AuthException catch (e) {
+      final message = e.message.toLowerCase();
+      if (message.contains('already') || message.contains('registered')) {
+        return RegisterResult.emailAlreadyExists;
+      }
+      if (message.contains('password') || message.contains('email')) {
+        return RegisterResult.validationError;
+      }
+      return RegisterResult.serviceError;
+    } catch (e) {
+      debugPrint('Supabase registration failed: $e');
+      return RegisterResult.serviceError;
+    }
   }
 
   // ── Login ─────────────────────────────────────────────────────────────────
@@ -390,18 +428,183 @@ class AuthService {
       return (result: LoginResult.validationError, account: null);
     }
 
-    AccountRecord? account = await findByEmail(normInput);
-    account ??= await findByUsername(normInput);
+    if (!isValidEmail(normInput) && !isValidUsername(normInput)) {
+      return (result: LoginResult.invalidEmailFormat, account: null);
+    }
 
-    if (account == null) {
+    final localAccount =
+        await findByEmail(normInput) ?? await findByUsername(normInput);
+
+    if (localAccount == null && !isValidEmail(normInput)) {
       return (result: LoginResult.emailNotFound, account: null);
     }
-    if (!verifyPassword(trimmedPw, account.passwordHash)) {
-      return (result: LoginResult.wrongPassword, account: null);
+
+    if (localAccount?.role.toLowerCase() == 'admin') {
+      if (!verifyPassword(trimmedPw, localAccount!.passwordHash)) {
+        return (result: LoginResult.wrongPassword, account: null);
+      }
+      await _writeSession(localAccount);
+      return (result: LoginResult.success, account: localAccount);
     }
 
-    await _writeSession(account);
-    return (result: LoginResult.success, account: account);
+    final authEmail = localAccount?.email ?? normInput;
+    if (!isValidEmail(authEmail)) {
+      return (result: LoginResult.invalidEmailFormat, account: null);
+    }
+
+    try {
+      final response = await SupabaseService.instance.client.auth
+          .signInWithPassword(email: authEmail, password: trimmedPw);
+      final user = response.user;
+      final accessToken = response.session?.accessToken;
+      if (user == null || accessToken == null) {
+        return (result: LoginResult.emailNotConfirmed, account: null);
+      }
+      final account = await _saveAuthenticatedAccount(
+        user,
+        fallback: localAccount,
+      );
+      await _syncAccount(account, accessToken);
+      await _writeSession(
+        account,
+        accessToken: accessToken,
+        refreshToken: response.session?.refreshToken,
+      );
+      return (result: LoginResult.success, account: account);
+    } on AuthException catch (e) {
+      final message = e.message.toLowerCase();
+      if (message.contains('not confirmed') ||
+          message.contains('confirm your email')) {
+        return (result: LoginResult.emailNotConfirmed, account: null);
+      }
+      if (message.contains('invalid login credentials') &&
+          localAccount != null &&
+          localAccount.passwordHash.isNotEmpty &&
+          verifyPassword(trimmedPw, localAccount.passwordHash)) {
+        return _migrateLegacyAccount(localAccount, trimmedPw);
+      }
+      if (message.contains('invalid login credentials')) {
+        return (result: LoginResult.wrongPassword, account: null);
+      }
+      return (result: LoginResult.serviceError, account: null);
+    } catch (e) {
+      debugPrint('Supabase login failed: $e');
+      return (result: LoginResult.serviceError, account: null);
+    }
+  }
+
+  Future<({LoginResult result, AccountRecord? account})> _migrateLegacyAccount(
+    AccountRecord legacy,
+    String password,
+  ) async {
+    try {
+      final response = await SupabaseService.instance.client.auth.signUp(
+        email: legacy.email,
+        password: password,
+        data: {
+          'full_name': legacy.fullName,
+          'username': legacy.username,
+          'role': 'CUSTOMER',
+        },
+      );
+      final user = response.user;
+      final accessToken = response.session?.accessToken;
+      if (user == null) {
+        return (result: LoginResult.serviceError, account: null);
+      }
+      final account = await _saveAuthenticatedAccount(user, fallback: legacy);
+      if (accessToken == null) {
+        return (result: LoginResult.emailNotConfirmed, account: null);
+      }
+      await _syncAccount(account, accessToken);
+      await _writeSession(
+        account,
+        accessToken: accessToken,
+        refreshToken: response.session?.refreshToken,
+      );
+      return (result: LoginResult.success, account: account);
+    } on AuthException catch (e) {
+      final message = e.message.toLowerCase();
+      if (message.contains('not confirmed') ||
+          message.contains('confirm your email')) {
+        return (result: LoginResult.emailNotConfirmed, account: null);
+      }
+      if (message.contains('already') || message.contains('registered')) {
+        return (result: LoginResult.wrongPassword, account: null);
+      }
+      return (result: LoginResult.serviceError, account: null);
+    } catch (e) {
+      debugPrint('Legacy account migration failed: $e');
+      return (result: LoginResult.serviceError, account: null);
+    }
+  }
+
+  Future<AccountRecord> _saveAuthenticatedAccount(
+    User user, {
+    AccountRecord? fallback,
+  }) async {
+    final email = user.email;
+    if (email == null || email.isEmpty) {
+      throw StateError('Authenticated account has no email.');
+    }
+    final existing = fallback ?? await findByEmail(email);
+    final metadata = user.userMetadata ?? const <String, dynamic>{};
+    final accounts = await _getAccounts();
+    final account = AccountRecord(
+      id: user.id,
+      fullName:
+          existing?.fullName ??
+          (metadata['full_name'] as String?) ??
+          email.split('@').first,
+      email: normalizeEmail(email),
+      role: 'CUSTOMER',
+      passwordHash: '',
+      username:
+          existing?.username ??
+          (metadata['username'] as String?) ??
+          _generateUsername(email, accounts),
+      usernameChangedAt: existing?.usernameChangedAt,
+      phone: existing?.phone ?? '',
+      avatarPath: existing?.avatarPath,
+    );
+    await _saveAccount(account);
+    return account;
+  }
+
+  Future<void> _saveAccount(AccountRecord account) async {
+    final accounts = await _getAccounts();
+    final index = accounts.indexWhere(
+      (item) => item.email == account.email || item.id == account.id,
+    );
+    if (index >= 0) {
+      accounts[index] = account;
+    } else {
+      accounts.add(account);
+    }
+    await _saveAccounts(accounts);
+  }
+
+  Future<void> _syncAccount(AccountRecord account, String accessToken) async {
+    await SupabaseService.instance.syncUserToCloud(
+      id: account.id,
+      fullName: account.fullName,
+      email: account.email,
+      role: account.role,
+      username: account.username,
+      phone: account.phone,
+      accessToken: accessToken,
+    );
+  }
+
+  Future<void> _syncAccountWithCurrentSession(AccountRecord account) async {
+    final service = SupabaseService.instance;
+    if (account.role.toLowerCase() == 'admin' || !service.isInitialized) {
+      return;
+    }
+    final accessToken = service.client.auth.currentSession?.accessToken;
+    if (accessToken != null) {
+      await _syncAccount(account, accessToken);
+    }
   }
 
   // ── Update Profile (name, username, phone) ────────────────────────────────
@@ -453,11 +656,10 @@ class AuthService {
           return UpdateProfileResult.usernameCooldown;
         }
       }
-      final now = (norm == current.username) ? current.usernameChangedAt : DateTime.now();
-      updated = updated.copyWith(
-        username: norm,
-        usernameChangedAt: now,
-      );
+      final now = (norm == current.username)
+          ? current.usernameChangedAt
+          : DateTime.now();
+      updated = updated.copyWith(username: norm, usernameChangedAt: now);
     }
 
     // ── Phone ─────────────────────────────────────────────────────────────────
@@ -471,6 +673,7 @@ class AuthService {
 
     accounts[idx] = updated;
     await _saveAccounts(accounts);
+    await _syncAccountWithCurrentSession(updated);
     await _refreshSession(updated);
     return UpdateProfileResult.success;
   }
@@ -493,11 +696,6 @@ class AuthService {
 
     final current = accounts[idx];
 
-    // Verify password
-    if (!verifyPassword(currentPassword, current.passwordHash)) {
-      return EmailChangeResult.wrongPassword;
-    }
-
     // Uniqueness check (excluding self)
     final clash = accounts.firstWhere(
       (a) => a.email == normNew && a.id != userId,
@@ -507,9 +705,50 @@ class AuthService {
       return EmailChangeResult.emailTaken;
     }
 
-    final updated = current.copyWith(email: normNew);
+    var emailToSave = normNew;
+    if (current.role.toLowerCase() == 'admin') {
+      if (!verifyPassword(currentPassword, current.passwordHash)) {
+        return EmailChangeResult.wrongPassword;
+      }
+    } else {
+      try {
+        final auth = SupabaseService.instance.client.auth;
+        final authResponse = await auth.signInWithPassword(
+          email: current.email,
+          password: currentPassword,
+        );
+        final session = authResponse.session;
+        if (session != null) {
+          await _storage.saveAccessToken(session.accessToken);
+          final refreshToken = session.refreshToken;
+          if (refreshToken != null) {
+            await _storage.saveRefreshToken(refreshToken);
+          }
+        }
+        final response = await auth.updateUser(UserAttributes(email: normNew));
+        if (response.user == null) return EmailChangeResult.validationError;
+        if (response.user!.email != normNew) {
+          emailToSave = current.email;
+        }
+      } on AuthException catch (e) {
+        final message = e.message.toLowerCase();
+        if (message.contains('invalid login credentials')) {
+          return EmailChangeResult.wrongPassword;
+        }
+        if (message.contains('already') || message.contains('registered')) {
+          return EmailChangeResult.emailTaken;
+        }
+        return EmailChangeResult.validationError;
+      } catch (e) {
+        debugPrint('Supabase email update failed: $e');
+        return EmailChangeResult.validationError;
+      }
+    }
+
+    final updated = current.copyWith(email: emailToSave);
     accounts[idx] = updated;
     await _saveAccounts(accounts);
+    await _syncAccountWithCurrentSession(updated);
     await _refreshSession(updated);
     return EmailChangeResult.success;
   }
@@ -528,15 +767,29 @@ class AuthService {
     final updated = accounts[idx].copyWith(avatarPath: newPath);
     accounts[idx] = updated;
     await _saveAccounts(accounts);
+    await _syncAccountWithCurrentSession(updated);
     await _refreshSession(updated);
     return true;
   }
 
   // ── Session helpers ───────────────────────────────────────────────────────
 
-  Future<void> _writeSession(AccountRecord a) async {
-    await _storage.saveAccessToken('bun_session_${a.id}');
+  Future<void> _writeSession(
+    AccountRecord a, {
+    String? accessToken,
+    String? refreshToken,
+  }) async {
+    await _storage.saveAccessToken(accessToken ?? 'bun_session_${a.id}');
+    if (refreshToken != null) {
+      await _storage.saveRefreshToken(refreshToken);
+    }
     await _storage.saveUserData(_toSessionMap(a));
+  }
+
+  Future<void> signOut() async {
+    if (SupabaseService.instance.isInitialized) {
+      await SupabaseService.instance.client.auth.signOut();
+    }
   }
 
   /// Update the session userData without touching the token.
@@ -566,7 +819,8 @@ class AuthService {
 
   static bool isValidEmail(String email) {
     final trimmed = email.trim();
-    return RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(trimmed);
+    return RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+        .hasMatch(trimmed);
   }
 
   /// Returns E.164 (+62…) or null if invalid.

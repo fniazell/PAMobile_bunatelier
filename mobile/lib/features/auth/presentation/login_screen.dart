@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../app/theme/app_colors.dart';
 import '../auth_service.dart';
 import '../providers/auth_provider.dart';
@@ -33,11 +34,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
+    final identifier = _emailController.text.trim();
+    if (!AuthService.isValidEmail(identifier) &&
+        !AuthService.isValidUsername(identifier)) {
+      final messenger = ScaffoldMessenger.of(context);
+      messenger
+        ..clearSnackBars()
+        ..showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.espresso,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            content: const Text(
+              'Mohon masukkan alamat email dengan benar.',
+              style: TextStyle(color: AppColors.cream, fontSize: 13),
+            ),
+          ),
+        );
+      return;
+    }
+
     // Clear any previous error before calling login
-    final result = await ref.read(authProvider.notifier).login(
-      _emailController.text,
-      _passwordController.text,
-    );
+    final result = await ref
+        .read(authProvider.notifier)
+        .login(identifier, _passwordController.text);
 
     if (!mounted) return;
 
@@ -60,7 +83,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           backgroundColor: AppColors.espresso,
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 2),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           content: const Text(
             'Silakan mendaftar akun terlebih dahulu.',
             style: TextStyle(color: AppColors.cream, fontSize: 13),
@@ -93,7 +118,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           backgroundColor: AppColors.forestGreen,
           duration: const Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           content: const Row(
             children: [
               Icon(Icons.fingerprint_rounded, color: AppColors.butterYellow),
@@ -173,29 +200,41 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 10),
                 Text(
                   'Sign in to order your messy, glorious artisan burger.',
-                  style: textTheme.bodyLarge?.copyWith(color: AppColors.mutedText),
+                  style: textTheme.bodyLarge?.copyWith(
+                    color: AppColors.mutedText,
+                  ),
                 ),
                 const SizedBox(height: 36),
 
                 // Inline error banner (wrong password / validation)
                 if (authState.errorMessage != null &&
-                    authState.errorMessage != 'Silakan mendaftar akun terlebih dahulu.') ...[
+                    authState.errorMessage !=
+                        'Silakan mendaftar akun terlebih dahulu.') ...[
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: AppColors.error.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.error.withValues(alpha: 0.4)),
+                      border: Border.all(
+                        color: AppColors.error.withValues(alpha: 0.4),
+                      ),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 20),
+                        const Icon(
+                          Icons.error_outline_rounded,
+                          color: AppColors.error,
+                          size: 20,
+                        ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
                             authState.errorMessage!,
-                            style: const TextStyle(color: AppColors.error, fontSize: 13),
+                            style: const TextStyle(
+                              color: AppColors.error,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
                       ],
@@ -218,8 +257,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
-                    hintText: 'e.g. foodlover@bunatelier.com atau bunatelier.admin',
-                    prefixIcon: Icon(Icons.person_outline_rounded, color: AppColors.mutedText),
+                    hintText:
+                        'e.g. foodlover@bunatelier.com atau bunatelier.admin',
+                    prefixIcon: Icon(
+                      Icons.person_outline_rounded,
+                      color: AppColors.mutedText,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -239,7 +282,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     hintText: '••••••••',
-                    prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.mutedText),
+                    prefixIcon: const Icon(
+                      Icons.lock_outline_rounded,
+                      color: AppColors.mutedText,
+                    ),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword
@@ -247,7 +293,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             : Icons.visibility_off_outlined,
                         color: AppColors.mutedText,
                       ),
-                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
                     ),
                   ),
                 ),
@@ -278,7 +325,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   width: double.infinity,
                   height: 52,
                   child: OutlinedButton.icon(
-                    onPressed: authState.isLoading ? null : _handleBiometricLogin,
+                    onPressed: authState.isLoading
+                        ? null
+                        : _handleBiometricLogin,
                     icon: const Icon(Icons.fingerprint_rounded, size: 24),
                     label: const Text('BIOMETRIC UNLOCK'),
                   ),
@@ -292,7 +341,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     children: [
                       Text(
                         "Don't have an account? ",
-                        style: textTheme.bodyMedium?.copyWith(color: AppColors.mutedText),
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: AppColors.mutedText,
+                        ),
                       ),
                       GestureDetector(
                         onTap: () => context.push('/register'),

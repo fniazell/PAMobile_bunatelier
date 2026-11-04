@@ -1,6 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/storage/secure_storage_service.dart';
+import '../../features/feedback/models/feedback_model.dart';
 import '../../features/orders/models/order_model.dart';
 import '../../features/branch/models/branch_model.dart';
 import '../../features/cart/models/cart_item_model.dart';
@@ -24,6 +27,23 @@ class SupabaseService {
     'SUPABASE_ANON_KEY',
     defaultValue: _defaultKey,
   );
+
+  bool _initialized = false;
+
+  bool get isInitialized => _initialized;
+
+  SupabaseClient get client {
+    if (!_initialized) {
+      throw StateError('Supabase has not been initialized.');
+    }
+    return Supabase.instance.client;
+  }
+
+  Future<void> initialize() async {
+    if (_initialized) return;
+    await Supabase.initialize(url: projectUrl, publishableKey: anonKey);
+    _initialized = true;
+  }
 
   Dio get _dio => Dio(
     BaseOptions(
@@ -110,7 +130,10 @@ class SupabaseService {
   }
 
   /// Sinkronisasi item detail pesanan ke tabel 'order_items' di Supabase Cloud
-  Future<bool> syncOrderItemsToCloud(String orderId, List<CartItem> items) async {
+  Future<bool> syncOrderItemsToCloud(
+    String orderId,
+    List<CartItem> items,
+  ) async {
     try {
       if (items.isEmpty) return true;
       final payload = items.map((item) {
@@ -187,10 +210,7 @@ class SupabaseService {
     try {
       final response = await _dio.patch(
         '$projectUrl/rest/v1/orders?id=eq.$orderId',
-        data: {
-          'receipt_hash': receiptHash,
-          'receipt_tx_hash': txHash,
-        },
+        data: {'receipt_hash': receiptHash, 'receipt_tx_hash': txHash},
       );
       return response.statusCode == 200 || response.statusCode == 204;
     } catch (e) {
@@ -220,6 +240,7 @@ class SupabaseService {
     required String email,
     required String role,
     required String username,
+    required String accessToken,
     String? phone,
   }) async {
     try {
@@ -230,12 +251,17 @@ class SupabaseService {
         'role': role,
         'username': username,
         'phone': phone ?? '',
-        'created_at': DateTime.now().toIso8601String(),
       };
 
       final response = await _dio.post(
-        '$projectUrl/rest/v1/users',
+        '$projectUrl/rest/v1/users?on_conflict=id',
         data: payload,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $accessToken',
+            'Prefer': 'resolution=merge-duplicates,return=representation',
+          },
+        ),
       );
 
       debugPrint('Supabase syncUser response: ${response.statusCode}');
@@ -297,6 +323,191 @@ class SupabaseService {
     } catch (e) {
       debugPrint('Supabase updateBranch offline: $e');
       return false;
+    }
+  }
+
+  /// Kirim feedback pelanggan ke Supabase Cloud (tabel 'feedbacks')
+  Future<({bool success, String? error, FeedbackModel? feedback})> submitFeedback({
+    required String orderId,
+    required String userId,
+    required int rating,
+    String? customerName,
+    String? comment,
+    DateTime? createdAt,
+  }) async {
+    final timestamp = (createdAt ?? DateTime.now().toUtc()).toIso8601String();
+    final payload = {
+      'order_id': orderId,
+      'user_id': userId,
+      if (customerName != null && customerName.trim().isNotEmpty)
+        'customer_name': customerName.trim(),
+      'rating': rating,
+      if (comment != null && comment.trim().isNotEmpty)
+        'comment': comment.trim(),
+      'created_at': timestamp,
+    };
+
+    // 1. Coba gunakan SupabaseClient jika sudah diinisialisasi
+    if (_initialized) {
+      try {
+        final inserted = await client
+            .from('feedbacks')
+            .insert(payload)
+            .select()
+            .single();
+        debugPrint('Supabase client feedback inserted to feedbacks table: $inserted');
+        final created = FeedbackModel.fromMap(
+          Map<String, dynamic>.from(inserted as Map),
+        );
+        return (success: true, error: null, feedback: created);
+      } catch (e) {
+        debugPrint('Supabase client insert to feedbacks table failed: $e');
+        final errStr = e.toString().toLowerCase();
+        if (errStr.contains('pgrst205') || errStr.contains('schema cache')) {
+          return (
+            success: false,
+            error:
+                'Tabel feedbacks belum dibuat di Supabase. Silakan jalankan file supabase_feedback_migration.sql di Supabase SQL Editor.',
+            feedback: null,
+          );
+        }
+        if (errStr.contains('23505') ||
+            errStr.contains('unique') ||
+            errStr.contains('feedbacks_order_id')) {
+          return (
+            success: false,
+            error: 'Pesanan ini sudah pernah diberikan penilaian/feedback.',
+            feedback: null,
+          );
+        }
+      }
+    }
+
+    // 2. Coba menggunakan REST API via Dio
+    try {
+      final token = await SecureStorageService().getAccessToken();
+      final headers = <String, dynamic>{
+        'apikey': anonKey,
+        'Authorization': 'Bearer ${token ?? anonKey}',
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation',
+      };
+
+      final response = await _dio.post(
+        '$projectUrl/rest/v1/feedbacks',
+        data: payload,
+        options: Options(headers: headers),
+      );
+
+      if ((response.statusCode == 201 || response.statusCode == 200) &&
+          response.data != null) {
+        Map<String, dynamic>? itemMap;
+        if (response.data is List && (response.data as List).isNotEmpty) {
+          itemMap = Map<String, dynamic>.from((response.data as List).first as Map);
+        } else if (response.data is Map) {
+          itemMap = Map<String, dynamic>.from(response.data as Map);
+        }
+        final created = itemMap != null
+            ? FeedbackModel.fromMap(itemMap)
+            : FeedbackModel(
+                orderId: orderId,
+                userId: userId,
+                customerName: customerName,
+                rating: rating,
+                comment: comment,
+                createdAt: DateTime.tryParse(timestamp) ?? DateTime.now(),
+              );
+        return (success: true, error: null, feedback: created);
+      }
+
+      return (
+        success: false,
+        error: 'Gagal menyimpan feedback (${response.statusCode})',
+        feedback: null,
+      );
+    } on DioException catch (e) {
+      debugPrint('Supabase feedback insert DioException: ${e.response?.data ?? e.message}');
+      String? errorMessage;
+      if (e.response?.data is Map) {
+        final data = e.response!.data as Map;
+        final code = data['code']?.toString();
+        final rawMsg = data['message']?.toString();
+        if (code == 'PGRST205' || (rawMsg != null && rawMsg.contains('schema cache'))) {
+          errorMessage =
+              'Tabel feedbacks belum dibuat di Supabase. Silakan jalankan file supabase_feedback_migration.sql di Supabase SQL Editor.';
+        } else if (code == '23505' || (rawMsg != null && rawMsg.contains('feedbacks_order_id'))) {
+          errorMessage = 'Pesanan ini sudah pernah diberikan penilaian/feedback.';
+        } else {
+          errorMessage = rawMsg ?? data['error']?.toString();
+        }
+      }
+      return (
+        success: false,
+        error: errorMessage ?? e.message ?? 'Terjadi kesalahan koneksi server.',
+        feedback: null,
+      );
+    } catch (e) {
+      debugPrint('Supabase feedback insert general exception: $e');
+      return (success: false, error: e.toString(), feedback: null);
+    }
+  }
+
+  /// Ambil seluruh feedback dari tabel 'feedbacks' di Supabase Cloud (diurutkan created_at desc)
+  Future<List<FeedbackModel>> fetchFeedbacks() async {
+    // 1. Coba lewat SupabaseClient jika tersedia
+    if (_initialized) {
+      try {
+        final res = await client
+            .from('feedbacks')
+            .select('*')
+            .order('created_at', ascending: false);
+        if (res is List) {
+          return res.map((item) {
+            return FeedbackModel.fromMap(
+              Map<String, dynamic>.from(item as Map),
+            );
+          }).toList();
+        }
+      } catch (e) {
+        debugPrint('Supabase client fetchFeedbacks failed: $e');
+      }
+    }
+
+    // 2. Coba lewat REST API via Dio
+    try {
+      final token = await SecureStorageService().getAccessToken();
+      final headers = <String, dynamic>{
+        'apikey': anonKey,
+        'Authorization': 'Bearer ${token ?? anonKey}',
+        'Content-Type': 'application/json',
+      };
+
+      final response = await _dio.get(
+        '$projectUrl/rest/v1/feedbacks?select=*&order=created_at.desc',
+        options: Options(headers: headers),
+      );
+
+      if (response.statusCode == 200 && response.data is List) {
+        final list = response.data as List;
+        return list.map((item) {
+          return FeedbackModel.fromMap(
+            Map<String, dynamic>.from(item as Map),
+          );
+        }).toList();
+      }
+      return [];
+    } on DioException catch (e) {
+      debugPrint('Supabase fetchFeedbacks DioException: ${e.response?.data ?? e.message}');
+      final is404 = e.response?.statusCode == 404;
+      if (is404) {
+        throw Exception(
+          'Tabel feedbacks belum dibuat di Supabase. Silakan jalankan file supabase_feedback_migration.sql di Supabase SQL Editor.',
+        );
+      }
+      rethrow;
+    } catch (e) {
+      debugPrint('Supabase fetchFeedbacks exception: $e');
+      rethrow;
     }
   }
 

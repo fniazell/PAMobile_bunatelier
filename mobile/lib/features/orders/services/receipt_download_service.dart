@@ -1,8 +1,12 @@
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:gal/gal.dart';
+
+import 'receipt_web_downloader_stub.dart'
+    if (dart.library.html) 'receipt_web_downloader_web.dart';
 
 class ReceiptDownloadResult {
   final bool isSuccess;
@@ -60,7 +64,7 @@ class ReceiptDownloadService {
     }
   }
 
-  /// Saves PNG image bytes directly to the device's native photo gallery
+  /// Saves PNG image bytes directly to the device's native photo gallery or browser downloads
   Future<ReceiptDownloadResult> saveReceiptToGallery({
     required Uint8List imageBytes,
     required String orderNumber,
@@ -72,13 +76,26 @@ class ReceiptDownloadService {
       );
     }
 
-    try {
-      final cleanOrderNum =
-          orderNumber.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
-      final fileName = 'BunAtelier_Receipt_$cleanOrderNum';
+    final cleanOrderNum =
+        orderNumber.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
+    final fileName = 'BunAtelier_Receipt_$cleanOrderNum';
 
+    try {
       if (testSaverOverride != null) {
         await testSaverOverride!(imageBytes, name: fileName);
+      } else if (kIsWeb) {
+        final success = await downloadReceiptOnWeb(imageBytes, fileName);
+        if (success) {
+          return const ReceiptDownloadResult(
+            isSuccess: true,
+            message: 'E-Receipt berhasil diunduh ke folder Downloads!',
+          );
+        } else {
+          return const ReceiptDownloadResult(
+            isSuccess: false,
+            message: 'Gagal mengunduh e-receipt di browser. Silakan coba lagi.',
+          );
+        }
       } else {
         await Gal.putImageBytes(imageBytes, name: fileName);
       }
@@ -86,6 +103,23 @@ class ReceiptDownloadService {
       return const ReceiptDownloadResult(
         isSuccess: true,
         message: 'E-Receipt berhasil disimpan ke galeri foto!',
+      );
+    } on MissingPluginException catch (e) {
+      debugPrint(
+          'ReceiptDownloadService.saveReceiptToGallery MissingPluginException: $e');
+      if (kIsWeb) {
+        final success = await downloadReceiptOnWeb(imageBytes, fileName);
+        if (success) {
+          return const ReceiptDownloadResult(
+            isSuccess: true,
+            message: 'E-Receipt berhasil diunduh ke folder Downloads!',
+          );
+        }
+      }
+      return const ReceiptDownloadResult(
+        isSuccess: false,
+        message:
+            'Plugin galeri belum terpasang pada native build. Mohon hentikan aplikasi dan jalankan ulang penuh (full restart) dengan flutter run.',
       );
     } on GalException catch (e) {
       debugPrint(

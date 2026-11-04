@@ -202,6 +202,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
           errorMessage: 'Silakan mendaftar akun terlebih dahulu.',
         );
 
+      case LoginResult.invalidEmailFormat:
+        state = state.copyWith(
+          isLoading: false,
+          isAuthenticated: false,
+          errorMessage: 'Mohon masukkan alamat email dengan benar.',
+        );
+
       case LoginResult.wrongPassword:
         state = state.copyWith(
           isLoading: false,
@@ -209,11 +216,27 @@ class AuthNotifier extends StateNotifier<AuthState> {
           errorMessage: 'Email atau password salah.',
         );
 
+      case LoginResult.emailNotConfirmed:
+        state = state.copyWith(
+          isLoading: false,
+          isAuthenticated: false,
+          errorMessage:
+              'Verifikasi email kamu terlebih dahulu, lalu coba masuk kembali.',
+        );
+
       case LoginResult.validationError:
         state = state.copyWith(
           isLoading: false,
           isAuthenticated: false,
           errorMessage: 'Masukkan email dan password terlebih dahulu.',
+        );
+
+      case LoginResult.serviceError:
+        state = state.copyWith(
+          isLoading: false,
+          isAuthenticated: false,
+          errorMessage:
+              'Tidak dapat terhubung ke layanan login. Coba lagi nanti.',
         );
     }
 
@@ -239,6 +262,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     switch (result) {
       case RegisterResult.success:
         state = state.copyWith(isLoading: false, errorMessage: null);
+      case RegisterResult.emailConfirmationRequired:
+        state = state.copyWith(isLoading: false, errorMessage: null);
       case RegisterResult.emailAlreadyExists:
         state = state.copyWith(
           isLoading: false,
@@ -247,7 +272,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
       case RegisterResult.validationError:
         state = state.copyWith(
           isLoading: false,
-          errorMessage: 'Password minimal 6 karakter.',
+          errorMessage: 'Periksa kembali format email dan password kamu.',
+        );
+      case RegisterResult.serviceError:
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage:
+              'Registrasi gagal terhubung ke layanan. Coba lagi nanti.',
         );
     }
 
@@ -522,8 +553,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
   // ── Logout ────────────────────────────────────────────────────────────────
 
   Future<void> logout() async {
-    await _storage.clearAuthSession();
-    state = const AuthState();
+    try {
+      await _authService.signOut();
+    } catch (e) {
+      debugPrint('Supabase sign-out failed: $e');
+    } finally {
+      await _storage.clearAuthSession();
+      state = const AuthState();
+    }
   }
 
   Future<void> _syncBiometricUser(AuthUser user) async {

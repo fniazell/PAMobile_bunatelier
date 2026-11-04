@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../feedback/models/feedback_model.dart';
+import '../../feedback/providers/feedback_provider.dart';
+import '../models/order_model.dart';
 import '../providers/orders_provider.dart';
 
 class OrdersScreen extends ConsumerStatefulWidget {
@@ -34,6 +39,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen>
     final textTheme = Theme.of(context).textTheme;
     final ordersState = ref.watch(ordersProvider);
     final authUser = ref.watch(authProvider).user;
+    final feedbackMap = ref.watch(orderFeedbacksMapProvider);
 
     // Filter order untuk customer aktif (atau tampilkan seluruh pesanan lokal jika order lokal belum memiliki userId)
     final userOrders = ordersState.orders.where((o) {
@@ -73,22 +79,29 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen>
       body: SafeArea(
         child: RefreshIndicator(
           color: AppColors.coral,
-          onRefresh: () => ref
-              .read(ordersProvider.notifier)
-              .syncOrdersFromCloud(userId: authUser?.id),
+          onRefresh: () async {
+            await Future.wait([
+              ref
+                  .read(ordersProvider.notifier)
+                  .syncOrdersFromCloud(userId: authUser?.id),
+              ref.read(feedbackFeedProvider.notifier).fetchFeedbacks(),
+            ]);
+          },
           child: TabBarView(
             controller: _tabController,
             children: [
-              _buildOrdersList(userOrders),
+              _buildOrdersList(userOrders, feedbackMap),
               _buildOrdersList(
                 userOrders
                     .where(
                       (o) => o.status != 'COMPLETED' && o.status != 'CANCELLED',
                     )
                     .toList(),
+                feedbackMap,
               ),
               _buildOrdersList(
                 userOrders.where((o) => o.status == 'COMPLETED').toList(),
+                feedbackMap,
               ),
             ],
           ),
@@ -97,7 +110,10 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen>
     );
   }
 
-  Widget _buildOrdersList(List<dynamic> list) {
+  Widget _buildOrdersList(
+    List<OrderItemModel> list,
+    Map<String, FeedbackModel> feedbackMap,
+  ) {
     if (list.isEmpty) {
       return Center(
         child: Column(
@@ -129,6 +145,9 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen>
       separatorBuilder: (context, index) => const SizedBox(height: 14),
       itemBuilder: (context, index) {
         final order = list[index];
+        final feedback =
+            feedbackMap[order.id] ?? feedbackMap[order.orderNumber];
+        final isCompleted = order.status == 'COMPLETED';
 
         Color badgeColor;
         switch (order.status) {
@@ -278,47 +297,165 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen>
 
               const Divider(),
               _buildCustomerStatusInfo(order.status),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: order.isConfirmed
-                          ? AppColors.forestGreen
-                          : AppColors.mutedText,
-                      side: BorderSide(
-                        color: order.isConfirmed
+              const SizedBox(height: 12),
+
+              // Action Buttons Row
+              Align(
+                alignment: Alignment.centerRight,
+                child: Wrap(
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    // Hanya pesanan COMPLETED yang bisa diberi Feedback
+                    if (isCompleted) ...[
+                      if (feedback != null)
+                        OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFFC77800),
+                            side: const BorderSide(
+                              color: Color(0xFFF5A623),
+                              width: 1.2,
+                            ),
+                            backgroundColor: const Color(0xFFF5A623)
+                                .withValues(alpha: 0.08),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 7,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          icon: const Icon(
+                            Icons.star_rounded,
+                            size: 16,
+                            color: Color(0xFFF5A623),
+                          ),
+                          label: Text(
+                            'View Feedback (${feedback.rating}★)',
+                            style: const TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          onPressed: () => _showViewFeedbackDialog(
+                            context,
+                            order,
+                            feedback,
+                          ),
+                        )
+                      else
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.coral,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 7,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          icon: const Icon(
+                            Icons.rate_review_outlined,
+                            size: 15,
+                            color: Colors.white,
+                          ),
+                          label: const Text(
+                            'Give Feedback',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          onPressed: () async {
+                            final created = await context
+                                .push<FeedbackModel?>(
+                              '/feedback/give',
+                              extra: order,
+                            );
+
+                            if (created != null && context.mounted) {
+                              ref
+                                  .read(feedbackFeedProvider.notifier)
+                                  .fetchFeedbacks();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  backgroundColor: AppColors.forestGreen,
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  content: const Row(
+                                    children: [
+                                      Icon(
+                                        Icons.check_circle_rounded,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'Feedback berhasil dikirim! Terima kasih atas ulasan Anda.',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 12.5,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  duration: const Duration(seconds: 4),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                    ],
+
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: order.isConfirmed
                             ? AppColors.forestGreen
-                            : AppColors.borderLight,
+                            : AppColors.mutedText,
+                        side: BorderSide(
+                          color: order.isConfirmed
+                              ? AppColors.forestGreen
+                              : AppColors.borderLight,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 7,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 7,
+                      icon: Icon(
+                        order.isConfirmed
+                            ? Icons.receipt_long_rounded
+                            : Icons.lock_outline_rounded,
+                        size: 15,
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                      label: Text(
+                        order.isConfirmed
+                            ? 'Lihat & Unduh E-Receipt'
+                            : 'E-Receipt (Menunggu Konfirmasi)',
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
+                      onPressed: () =>
+                          context.push('/order-confirmed', extra: order),
                     ),
-                    icon: Icon(
-                      order.isConfirmed
-                          ? Icons.receipt_long_rounded
-                          : Icons.lock_outline_rounded,
-                      size: 15,
-                    ),
-                    label: Text(
-                      order.isConfirmed
-                          ? 'Lihat & Unduh E-Receipt'
-                          : 'E-Receipt (Menunggu Konfirmasi)',
-                      style: const TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    onPressed: () =>
-                        context.push('/order-confirmed', extra: order),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -407,6 +544,198 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen>
           ),
         ],
       ),
+    );
+  }
+
+  void _showViewFeedbackDialog(
+    BuildContext context,
+    OrderItemModel order,
+    FeedbackModel feedback,
+  ) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogCtx) {
+        final formattedDate = DateFormat(
+          'dd MMMM yyyy, HH:mm',
+        ).format(feedback.createdAt.toLocal());
+
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          backgroundColor: AppColors.surface(dialogCtx),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 420),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Your Feedback',
+                      style: GoogleFonts.dmSerifDisplay(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.text(dialogCtx),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF5A623).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.star_rounded,
+                            size: 15,
+                            color: Color(0xFFF5A623),
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            '${feedback.rating}/5',
+                            style: GoogleFonts.dmSans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFFC77800),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Pesanan: ${order.orderNumber}',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12.5,
+                    color: AppColors.subtext(dialogCtx),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 18),
+
+                // Star row
+                Row(
+                  children: List.generate(5, (index) {
+                    final starNum = index + 1;
+                    final isFilled = starNum <= feedback.rating;
+                    return Icon(
+                      isFilled
+                          ? Icons.star_rounded
+                          : Icons.star_outline_rounded,
+                      size: 26,
+                      color: isFilled
+                          ? const Color(0xFFF5A623)
+                          : AppColors.border(dialogCtx),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 16),
+
+                // Comment box
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: AppColors.cream.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppColors.border(dialogCtx)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Komentar / Catatan Pengalaman:',
+                        style: GoogleFonts.dmSans(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.subtext(dialogCtx),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        feedback.comment != null &&
+                                feedback.comment!.trim().isNotEmpty
+                            ? feedback.comment!.trim()
+                            : 'Tidak ada ulasan teks yang disertakan.',
+                        style: GoogleFonts.dmSans(
+                          fontSize: 13.5,
+                          fontStyle: feedback.comment == null ||
+                                  feedback.comment!.trim().isEmpty
+                              ? FontStyle.italic
+                              : FontStyle.normal,
+                          color: AppColors.text(dialogCtx),
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                // Date
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.schedule_rounded,
+                      size: 14,
+                      color: AppColors.mutedText,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      'Dikirim pada $formattedDate',
+                      style: GoogleFonts.dmSans(
+                        fontSize: 11.5,
+                        color: AppColors.mutedText,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 22),
+
+                // Close Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 44,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.espresso,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () => Navigator.of(dialogCtx).pop(),
+                    child: Text(
+                      'TUTUP',
+                      style: GoogleFonts.dmSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

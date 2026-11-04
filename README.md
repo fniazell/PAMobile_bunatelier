@@ -7,6 +7,8 @@ A modern, editorial burger ordering mobile application built for final academic 
 ## 🛠️ Tech Stack
 
 - **Frontend (Mobile):** Flutter 3.47+ (Dart 3.13+), Riverpod, GoRouter, Dio, SQLite (`sqflite`), `flutter_secure_storage`, `local_auth` (Biometrics), `geolocator`, `flutter_map` (OpenStreetMap), `sensors_plus` (Accelerometer/Gyroscope), `flutter_local_notifications`, `timezone`, GoogleFonts (*DM Serif Display* & *DM Sans*).
+- **Authentication:** Customer registration and login use Supabase Auth; legacy customer accounts are migrated when their local account record is available. Admin accounts remain local.
+- To mirror Auth users into `public.users`, run [`supabase_auth_users_sync.sql`](./supabase_auth_users_sync.sql) once in the Supabase SQL Editor. It also backfills existing Auth users.
 - **Backend (REST API):** Node.js 20+, Express, TypeScript, Prisma ORM, Argon2id, JWT, Zod, Gemini API.
 - **Database:**
   - **Online Database:** PostgreSQL hosted on **Supabase** (handled via Prisma ORM).

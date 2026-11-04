@@ -6,6 +6,8 @@ import '../../theme/admin_colors.dart';
 import '../../../orders/providers/orders_provider.dart';
 import '../../../orders/models/order_model.dart';
 import '../../../catalog/providers/catalog_provider.dart';
+import '../../../feedback/models/feedback_model.dart';
+import '../../../feedback/providers/feedback_provider.dart';
 
 class AdminReportsTab extends ConsumerStatefulWidget {
   const AdminReportsTab({super.key});
@@ -24,7 +26,7 @@ class _AdminReportsTabState extends ConsumerState<AdminReportsTab> with SingleTi
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
   }
 
   @override
@@ -197,7 +199,7 @@ class _AdminReportsTabState extends ConsumerState<AdminReportsTab> with SingleTi
                 ),
                 const SizedBox(height: 12),
 
-                // 5 Dedicated Report Tabs
+                // Dedicated Report Tabs
                 TabBar(
                   controller: _tabController,
                   isScrollable: true,
@@ -213,6 +215,7 @@ class _AdminReportsTabState extends ConsumerState<AdminReportsTab> with SingleTi
                     Tab(text: '3. Produk Terjual'),
                     Tab(text: '4. Pembatalan Pesanan'),
                     Tab(text: '5. Mutasi Stok'),
+                    Tab(text: '6. Customer Feedback'),
                   ],
                 ),
               ],
@@ -238,6 +241,9 @@ class _AdminReportsTabState extends ConsumerState<AdminReportsTab> with SingleTi
 
                 // 5. Stock Movements Log
                 _buildStockMovementsReportTab(stockLogs),
+
+                // 6. Customer Feedback
+                _buildCustomerFeedbackTab(),
               ],
             ),
           ),
@@ -818,6 +824,560 @@ class _AdminReportsTabState extends ConsumerState<AdminReportsTab> with SingleTi
                 Navigator.pop(diagCtx);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(backgroundColor: AdminColors.success, content: Text('Data CSV berhasil disalin ke clipboard!')),
+                );
+              },
+              icon: const Icon(Icons.copy, size: 14, color: Colors.white),
+              label: const Text('Salin CSV', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(backgroundColor: AdminColors.burgundy),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ── Tab 6: Customer Feedback ──────────────────────────────────────────────
+  Widget _buildCustomerFeedbackTab() {
+    final feedbacksAsync = ref.watch(feedbackFeedProvider);
+
+    return feedbacksAsync.when(
+      loading: () => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32),
+          child: CircularProgressIndicator(color: AdminColors.burgundy),
+        ),
+      ),
+      error: (err, _) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.cloud_off_rounded, size: 48, color: AdminColors.mutedText),
+              const SizedBox(height: 12),
+              Text(
+                'Gagal Memuat Feedback',
+                style: AdminColors.serifHeading(fontSize: 18),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                err.toString(),
+                textAlign: TextAlign.center,
+                style: AdminColors.sansUI(fontSize: 11, color: AdminColors.mutedText),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () => ref.read(feedbackFeedProvider.notifier).fetchFeedbacks(),
+                icon: const Icon(Icons.refresh, size: 16, color: Colors.white),
+                label: const Text('Coba Lagi', style: TextStyle(color: Colors.white)),
+                style: ElevatedButton.styleFrom(backgroundColor: AdminColors.burgundy),
+              ),
+            ],
+          ),
+        ),
+      ),
+      data: (feedbacks) {
+        // Calculate statistics
+        final totalCount = feedbacks.length;
+        final averageRating = totalCount > 0
+            ? feedbacks.fold(0.0, (sum, f) => sum + f.rating) / totalCount
+            : 0.0;
+
+        // Star counts (1 to 5)
+        final starCounts = <int, int>{5: 0, 4: 0, 3: 0, 2: 0, 1: 0};
+        for (final f in feedbacks) {
+          final r = f.rating.clamp(1, 5);
+          starCounts[r] = (starCounts[r] ?? 0) + 1;
+        }
+
+        return RefreshIndicator(
+          color: AdminColors.burgundy,
+          onRefresh: () => ref.read(feedbackFeedProvider.notifier).fetchFeedbacks(),
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Summary Card: Statistik & Distribusi Rating ─────────────
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AdminColors.border),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.02),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'RINGKASAN KEPUASAN PELANGGAN',
+                                style: AdminColors.sansUI(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: AdminColors.burgundy,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Customer Satisfaction & Ratings',
+                                style: AdminColors.serifHeading(fontSize: 18),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              OutlinedButton.icon(
+                                onPressed: totalCount > 0
+                                    ? () => _showFeedbackCsvExportModal(context, feedbacks)
+                                    : null,
+                                icon: const Icon(Icons.download, size: 14, color: AdminColors.burgundy),
+                                label: Text(
+                                  'Ekspor CSV',
+                                  style: AdminColors.sansUI(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: AdminColors.burgundy,
+                                  ),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(color: AdminColors.burgundy),
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                tooltip: 'Segarkan Data Feedback',
+                                icon: const Icon(Icons.refresh, size: 18, color: AdminColors.burgundy),
+                                onPressed: () => ref.read(feedbackFeedProvider.notifier).fetchFeedbacks(),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isNarrow = constraints.maxWidth < 600;
+
+                          final ratingScoreBox = Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                            decoration: BoxDecoration(
+                              color: AdminColors.warmWhite,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AdminColors.border),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  totalCount > 0 ? averageRating.toStringAsFixed(1) : '0.0',
+                                  style: AdminColors.serifHeading(
+                                    fontSize: 42,
+                                    color: AdminColors.darkBrown,
+                                  ),
+                                ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: List.generate(5, (idx) {
+                                    final starVal = idx + 1;
+                                    final isFilled = starVal <= averageRating.round();
+                                    return Icon(
+                                      isFilled ? Icons.star_rounded : Icons.star_outline_rounded,
+                                      size: 18,
+                                      color: const Color(0xFFF5A623),
+                                    );
+                                  }),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  '$totalCount Total Ulasan',
+                                  style: AdminColors.sansUI(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: AdminColors.mutedText,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+
+                          final distributionBars = Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [5, 4, 3, 2, 1].map((star) {
+                              final count = starCounts[star] ?? 0;
+                              final pct = totalCount > 0 ? (count / totalCount) : 0.0;
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 3),
+                                child: Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 26,
+                                      child: Text(
+                                        '$star ★',
+                                        style: AdminColors.sansUI(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: AdminColors.darkBrown,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(4),
+                                        child: LinearProgressIndicator(
+                                          value: pct,
+                                          minHeight: 8,
+                                          backgroundColor: AdminColors.sandBeige,
+                                          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFF5A623)),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    SizedBox(
+                                      width: 70,
+                                      child: Text(
+                                        '$count (${(pct * 100).toStringAsFixed(0)}%)',
+                                        textAlign: TextAlign.end,
+                                        style: AdminColors.sansUI(
+                                          fontSize: 10.5,
+                                          color: AdminColors.mutedText,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          );
+
+                          if (isNarrow) {
+                            return Column(
+                              children: [
+                                ratingScoreBox,
+                                const SizedBox(height: 16),
+                                distributionBars,
+                              ],
+                            );
+                          }
+
+                          return Row(
+                            children: [
+                              SizedBox(width: 180, child: ratingScoreBox),
+                              const SizedBox(width: 24),
+                              Expanded(child: distributionBars),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // ── Daftar Seluruh Feedback Pelanggan ───────────────────────
+                Text(
+                  'DAFTAR ULASAN & FEEDBACK PELANGGAN (${feedbacks.length})',
+                  style: AdminColors.sansUI(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: AdminColors.burgundy,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                if (feedbacks.isEmpty)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AdminColors.border),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.rate_review_outlined,
+                          size: 52,
+                          color: AdminColors.mutedText,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Belum Ada Feedback Pelanggan',
+                          style: AdminColors.serifHeading(fontSize: 18),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Seluruh penilaian dan saran dari pesanan pelanggan yang telah selesai akan otomatis tercatat dan muncul di sini.',
+                          textAlign: TextAlign.center,
+                          style: AdminColors.sansUI(fontSize: 12, color: AdminColors.mutedText),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: feedbacks.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, idx) {
+                      final item = feedbacks[idx];
+                      final dateFormatted = DateFormat(
+                        'dd MMM yyyy, HH:mm',
+                      ).format(item.createdAt.toLocal());
+                      final displayName = item.customerName != null && item.customerName!.trim().isNotEmpty
+                          ? item.customerName!.trim()
+                          : 'Pelanggan Bun Atelier';
+
+                      return Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AdminColors.border),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.02),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Customer Header & Rating Badge
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CircleAvatar(
+                                  radius: 18,
+                                  backgroundColor: AdminColors.sandBeige,
+                                  child: Text(
+                                    displayName.isNotEmpty ? displayName[0].toUpperCase() : 'P',
+                                    style: AdminColors.serifHeading(
+                                      fontSize: 15,
+                                      color: AdminColors.burgundy,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        displayName,
+                                        style: AdminColors.sansUI(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: AdminColors.darkBrown,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.receipt_long_rounded,
+                                            size: 13,
+                                            color: AdminColors.mutedText,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Expanded(
+                                            child: Text(
+                                              'Order ID: ${item.orderId}',
+                                              overflow: TextOverflow.ellipsis,
+                                              style: AdminColors.sansUI(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w600,
+                                                color: AdminColors.mutedText,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF5A623).withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: const Color(0xFFF5A623).withValues(alpha: 0.3),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.star_rounded,
+                                        size: 15,
+                                        color: Color(0xFFF5A623),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${item.rating}.0',
+                                        style: AdminColors.sansUI(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: const Color(0xFFC77800),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+
+                            // Comment / Review Content
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AdminColors.warmWhite,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: AdminColors.border),
+                              ),
+                              child: Text(
+                                item.comment != null && item.comment!.trim().isNotEmpty
+                                    ? item.comment!.trim()
+                                    : 'Pelanggan memberikan rating bintang tanpa ulasan teks tambahan.',
+                                style: AdminColors.sansUI(
+                                  fontSize: 12.5,
+                                  fontStyle: item.comment == null || item.comment!.trim().isEmpty
+                                      ? FontStyle.italic
+                                      : FontStyle.normal,
+                                  color: item.comment != null && item.comment!.trim().isNotEmpty
+                                      ? AdminColors.darkBrown
+                                      : AdminColors.mutedText,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+
+                            // Timestamp
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.access_time_rounded,
+                                      size: 13,
+                                      color: AdminColors.mutedText,
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      dateFormatted,
+                                      style: AdminColors.sansUI(
+                                        fontSize: 10.5,
+                                        color: AdminColors.mutedText,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: List.generate(5, (starIdx) {
+                                    final starVal = starIdx + 1;
+                                    return Icon(
+                                      starVal <= item.rating
+                                          ? Icons.star_rounded
+                                          : Icons.star_outline_rounded,
+                                      size: 14,
+                                      color: starVal <= item.rating
+                                          ? const Color(0xFFF5A623)
+                                          : AdminColors.border,
+                                    );
+                                  }),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                const SizedBox(height: 30),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showFeedbackCsvExportModal(BuildContext context, List<FeedbackModel> feedbacks) {
+    final buffer = StringBuffer();
+    buffer.writeln('ID Feedback,Order ID,Nama Pelanggan,User ID,Rating Bintang,Komentar,Tanggal');
+    for (final f in feedbacks) {
+      final dateStr = DateFormat('yyyy-MM-dd HH:mm').format(f.createdAt.toLocal());
+      final cleanComment = (f.comment ?? '').replaceAll('"', '""');
+      final cleanName = (f.customerName ?? 'Pelanggan Bun Atelier').replaceAll('"', '""');
+      buffer.writeln('${f.id ?? ""},${f.orderId},"$cleanName",${f.userId},${f.rating},"$cleanComment",$dateStr');
+    }
+
+    final csvText = buffer.toString();
+
+    showDialog(
+      context: context,
+      builder: (diagCtx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text('Ekspor Feedback Pelanggan (CSV)', style: AdminColors.serifHeading(fontSize: 18)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Data ulasan pelanggan sebanyak ${feedbacks.length} baris telah disiapkan dalam format CSV standar.',
+                style: AdminColors.sansUI(fontSize: 12),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                constraints: const BoxConstraints(maxHeight: 120),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: AdminColors.warmWhite, borderRadius: BorderRadius.circular(8)),
+                child: SingleChildScrollView(
+                  child: Text(csvText, style: const TextStyle(fontFamily: 'monospace', fontSize: 10)),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(diagCtx), child: const Text('Batal')),
+            ElevatedButton.icon(
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: csvText));
+                Navigator.pop(diagCtx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(backgroundColor: AdminColors.success, content: Text('Data CSV Feedback berhasil disalin ke clipboard!')),
                 );
               },
               icon: const Icon(Icons.copy, size: 14, color: Colors.white),

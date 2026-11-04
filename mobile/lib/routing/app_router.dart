@@ -22,6 +22,8 @@ import '../features/support/presentation/support_chat_screen.dart';
 import '../features/notifications/presentation/notifications_screen.dart';
 import '../features/admin/presentation/admin_scaffold.dart';
 import '../core/storage/secure_storage_service.dart';
+import '../features/feedback/presentation/feedback_screen.dart';
+import '../features/feedback/presentation/give_feedback_screen.dart';
 import '../features/ai_recommendation/models/ai_recommendation_models.dart';
 import '../features/ai_recommendation/presentation/ai_recommendation_entry_screen.dart';
 import '../features/ai_recommendation/presentation/ai_preference_selection_screen.dart';
@@ -54,6 +56,8 @@ class AppRouter {
   static const String blockchain = '/blockchain';
   static const String editProfile = '/profile/edit';
   static const String supportChat = '/support-chat';
+  static const String feedback = '/feedback';
+  static const String giveFeedback = '/feedback/give';
   static const String notifications = '/notifications';
   static const String admin = '/admin';
   static const String aiEntry = '/ai-recommendation';
@@ -182,6 +186,17 @@ class AppRouter {
       GoRoute(
         path: supportChat,
         builder: (context, state) => const SupportChatScreen(),
+      ),
+      GoRoute(
+        path: feedback,
+        builder: (context, state) => const FeedbackScreen(),
+      ),
+      GoRoute(
+        path: giveFeedback,
+        builder: (context, state) {
+          final order = state.extra as OrderItemModel?;
+          return GiveFeedbackScreen(order: order);
+        },
       ),
       GoRoute(
         path: notifications,

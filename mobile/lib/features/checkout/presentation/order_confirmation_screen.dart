@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/theme/app_colors.dart';
@@ -533,9 +534,13 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
                       fit: BoxFit.scaleDown,
                       child: Text(
                         _isDownloading
-                            ? 'MENYIMPAN KE GALERI...'
+                            ? (kIsWeb
+                                ? 'MENGUNDUH E-RECEIPT...'
+                                : 'MENYIMPAN KE GALERI...')
                             : (isConfirmed
-                                ? 'DOWNLOAD E-RECEIPT (SIMPAN KE GALERI)'
+                                ? (kIsWeb
+                                    ? 'DOWNLOAD E-RECEIPT'
+                                    : 'DOWNLOAD E-RECEIPT (SIMPAN KE GALERI)')
                                 : 'E-RECEIPT BELUM TERSEDIA'),
                         maxLines: 1,
                         style: const TextStyle(

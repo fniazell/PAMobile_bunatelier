@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../app/theme/app_colors.dart';
 import '../auth_service.dart';
 import '../providers/auth_provider.dart';
@@ -46,17 +47,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       setState(() => _localError = 'Password minimal 6 karakter.');
       return;
     }
-    if (_passwordController.text.trim() != _confirmPasswordController.text.trim()) {
+    if (_passwordController.text.trim() !=
+        _confirmPasswordController.text.trim()) {
       setState(() => _localError = 'Password tidak cocok.');
       return;
     }
 
     // ── Call register (no session created inside) ─────────────────────────
-    final result = await ref.read(authProvider.notifier).register(
-      _nameController.text.trim(),
-      emailRaw,
-      _passwordController.text.trim(),
-    );
+    final result = await ref
+        .read(authProvider.notifier)
+        .register(
+          _nameController.text.trim(),
+          emailRaw,
+          _passwordController.text.trim(),
+        );
 
     if (!mounted) return;
 
@@ -70,10 +74,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             backgroundColor: AppColors.forestGreen,
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 2),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             content: const Row(
               children: [
-                Icon(Icons.check_circle_rounded, color: AppColors.butterYellow, size: 22),
+                Icon(
+                  Icons.check_circle_rounded,
+                  color: AppColors.butterYellow,
+                  size: 22,
+                ),
                 SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -100,12 +110,32 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         //    Use go() to replace the register page so Back doesn't return here.
         context.go('/login', extra: emailRaw);
 
+      case RegisterResult.emailConfirmationRequired:
+        final messenger = ScaffoldMessenger.of(context);
+        messenger.clearSnackBars();
+        messenger.showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.forestGreen,
+            behavior: SnackBarBehavior.floating,
+            content: const Text(
+              'Registrasi berhasil. Periksa email untuk verifikasi sebelum masuk.',
+              style: TextStyle(color: AppColors.cream, fontSize: 13),
+            ),
+          ),
+        );
+        context.go('/login', extra: emailRaw);
+
       case RegisterResult.emailAlreadyExists:
         // Provider already set errorMessage; nothing extra to do here.
         break;
 
       case RegisterResult.validationError:
-        setState(() => _localError = 'Password minimal 6 karakter.');
+        setState(
+          () => _localError = 'Periksa kembali format email dan password kamu.',
+        );
+      case RegisterResult.serviceError:
+        // Provider already set errorMessage.
+        break;
     }
   }
 
@@ -143,7 +173,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               const SizedBox(height: 8),
               Text(
                 'Bergabunglah dengan Bun Atelier culinary club.',
-                style: textTheme.bodyLarge?.copyWith(color: AppColors.mutedText),
+                style: textTheme.bodyLarge?.copyWith(
+                  color: AppColors.mutedText,
+                ),
               ),
               const SizedBox(height: 28),
 
@@ -155,16 +187,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.error.withValues(alpha: 0.4)),
+                    border: Border.all(
+                      color: AppColors.error.withValues(alpha: 0.4),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 20),
+                      const Icon(
+                        Icons.error_outline_rounded,
+                        color: AppColors.error,
+                        size: 20,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           displayError,
-                          style: const TextStyle(color: AppColors.error, fontSize: 13),
+                          style: const TextStyle(
+                            color: AppColors.error,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ],
@@ -176,7 +217,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               // Full Name
               Text(
                 'NAMA LENGKAP',
-                style: textTheme.labelLarge?.copyWith(letterSpacing: 1.0, fontSize: 12),
+                style: textTheme.labelLarge?.copyWith(
+                  letterSpacing: 1.0,
+                  fontSize: 12,
+                ),
               ),
               const SizedBox(height: 8),
               TextField(
@@ -184,7 +228,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 textCapitalization: TextCapitalization.words,
                 decoration: const InputDecoration(
                   hintText: 'e.g. Raditya Dika',
-                  prefixIcon: Icon(Icons.person_outline_rounded, color: AppColors.mutedText),
+                  prefixIcon: Icon(
+                    Icons.person_outline_rounded,
+                    color: AppColors.mutedText,
+                  ),
                 ),
               ),
               const SizedBox(height: 18),
@@ -192,7 +239,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               // Email
               Text(
                 'EMAIL ADDRESS',
-                style: textTheme.labelLarge?.copyWith(letterSpacing: 1.0, fontSize: 12),
+                style: textTheme.labelLarge?.copyWith(
+                  letterSpacing: 1.0,
+                  fontSize: 12,
+                ),
               ),
               const SizedBox(height: 8),
               TextField(
@@ -200,7 +250,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(
                   hintText: 'raditya@example.com',
-                  prefixIcon: Icon(Icons.mail_outline_rounded, color: AppColors.mutedText),
+                  prefixIcon: Icon(
+                    Icons.mail_outline_rounded,
+                    color: AppColors.mutedText,
+                  ),
                 ),
               ),
               const SizedBox(height: 18),
@@ -208,7 +261,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               // Password
               Text(
                 'PASSWORD',
-                style: textTheme.labelLarge?.copyWith(letterSpacing: 1.0, fontSize: 12),
+                style: textTheme.labelLarge?.copyWith(
+                  letterSpacing: 1.0,
+                  fontSize: 12,
+                ),
               ),
               const SizedBox(height: 8),
               TextField(
@@ -216,7 +272,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
                   hintText: 'Min. 6 karakter',
-                  prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.mutedText),
+                  prefixIcon: const Icon(
+                    Icons.lock_outline_rounded,
+                    color: AppColors.mutedText,
+                  ),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
@@ -224,7 +283,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           : Icons.visibility_off_outlined,
                       color: AppColors.mutedText,
                     ),
-                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
                   ),
                 ),
               ),
@@ -233,7 +293,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               // Confirm Password
               Text(
                 'KONFIRMASI PASSWORD',
-                style: textTheme.labelLarge?.copyWith(letterSpacing: 1.0, fontSize: 12),
+                style: textTheme.labelLarge?.copyWith(
+                  letterSpacing: 1.0,
+                  fontSize: 12,
+                ),
               ),
               const SizedBox(height: 8),
               TextField(
@@ -241,7 +304,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 obscureText: _obscurePassword,
                 decoration: const InputDecoration(
                   hintText: 'Ulangi password',
-                  prefixIcon: Icon(Icons.lock_reset_rounded, color: AppColors.mutedText),
+                  prefixIcon: Icon(
+                    Icons.lock_reset_rounded,
+                    color: AppColors.mutedText,
+                  ),
                 ),
               ),
               const SizedBox(height: 32),
@@ -272,7 +338,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   children: [
                     Text(
                       'Sudah punya akun? ',
-                      style: textTheme.bodyMedium?.copyWith(color: AppColors.mutedText),
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: AppColors.mutedText,
+                      ),
                     ),
                     GestureDetector(
                       onTap: () => context.pop(),

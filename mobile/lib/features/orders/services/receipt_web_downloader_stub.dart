@@ -1,0 +1,6 @@
+import 'dart:typed_data';
+
+Future<bool> downloadReceiptOnWeb(Uint8List bytes, String fileName) async {
+  return false;
+}
+
