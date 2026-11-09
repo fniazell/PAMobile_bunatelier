@@ -27,7 +27,6 @@ class SaranPesanHistoryCard extends StatelessWidget {
     final cardBg = AppColors.surface(context);
     final borderColor = AppColors.border(context);
     final textColor = AppColors.text(context);
-    final subtextColor = AppColors.subtext(context);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -218,3 +217,4 @@ class SaranPesanHistoryCard extends StatelessWidget {
     );
   }
 }
+

@@ -43,3 +43,4 @@ TO anon, authenticated
 USING (true);
 
 COMMENT ON TABLE public.course_saran_pesan IS 'Tabel saran dan pesan mahasiswa untuk mata kuliah Pemrograman Aplikasi Mobile dan dosen pengampu';
+

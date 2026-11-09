@@ -462,13 +462,11 @@ class SupabaseService {
             .from('feedbacks')
             .select('*')
             .order('created_at', ascending: false);
-        if (res is List) {
-          return res.map((item) {
-            return FeedbackModel.fromMap(
-              Map<String, dynamic>.from(item as Map),
-            );
-          }).toList();
-        }
+        return (res as List).map((item) {
+          return FeedbackModel.fromMap(
+            Map<String, dynamic>.from(item as Map),
+          );
+        }).toList();
       } catch (e) {
         debugPrint('Supabase client fetchFeedbacks failed: $e');
       }
@@ -600,13 +598,11 @@ class SupabaseService {
             .select('*')
             .eq('user_id', userId)
             .order('created_at', ascending: false);
-        if (res is List) {
-          return res.map((item) {
-            return SaranPesanModel.fromMap(
-              Map<String, dynamic>.from(item as Map),
-            ).copyWith(isSynced: true);
-          }).toList();
-        }
+        return (res as List).map((item) {
+          return SaranPesanModel.fromMap(
+            Map<String, dynamic>.from(item as Map),
+          ).copyWith(isSynced: true);
+        }).toList();
       } catch (e) {
         debugPrint('Supabase client fetchUserSaranPesan failed: $e');
       }
@@ -649,13 +645,11 @@ class SupabaseService {
             .from('course_saran_pesan')
             .select('*')
             .order('created_at', ascending: false);
-        if (res is List) {
-          return res.map((item) {
-            return SaranPesanModel.fromMap(
-              Map<String, dynamic>.from(item as Map),
-            ).copyWith(isSynced: true);
-          }).toList();
-        }
+        return (res as List).map((item) {
+          return SaranPesanModel.fromMap(
+            Map<String, dynamic>.from(item as Map),
+          ).copyWith(isSynced: true);
+        }).toList();
       } catch (e) {
         debugPrint('Supabase client fetchAllSaranPesan failed: $e');
       }

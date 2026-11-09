@@ -74,7 +74,7 @@ class AppDatabase {
     await _createOrderTables(db);
     await _createBranchTables(db);
     await _createVoucherTables(db);
-    await _createAppFeedbackTable(db);
+    await _createSaranPesanTable(db);
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
@@ -204,7 +204,7 @@ class AppDatabase {
       } catch (_) {}
     }
     if (oldVersion < 11) {
-      await _createAppFeedbackTable(db);
+      await _createSaranPesanTable(db);
     }
   }
 
@@ -259,6 +259,66 @@ class AppDatabase {
         updated_at TEXT
       )
     ''');
+  }
+
+  Future<void> _createSaranPesanTable(DatabaseExecutor db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS course_saran_pesan (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        user_name TEXT,
+        user_email TEXT,
+        saran TEXT NOT NULL,
+        pesan TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        is_synced INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_course_saran_pesan_user_id
+      ON course_saran_pesan(user_id, created_at DESC)
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_course_saran_pesan_created_at
+      ON course_saran_pesan(created_at DESC)
+    ''');
+  }
+
+  // ── SQFLITE CRUD: SARAN & PESAN (Mata Kuliah PAM) ─────────────────────────
+  Future<int> insertSaranPesan(Map<String, dynamic> row) async {
+    final db = await database;
+    return await db.insert(
+      'course_saran_pesan',
+      row,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getSaranPesanByUser(String userId) async {
+    final db = await database;
+    return await db.query(
+      'course_saran_pesan',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      orderBy: 'created_at DESC',
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getAllSaranPesan() async {
+    final db = await database;
+    return await db.query(
+      'course_saran_pesan',
+      orderBy: 'created_at DESC',
+    );
+  }
+
+  Future<int> deleteSaranPesan(String id) async {
+    final db = await database;
+    return await db.delete(
+      'course_saran_pesan',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   // ── SQFLITE CRUD: ORDERS ──────────────────────────────────────────────────
@@ -488,71 +548,4 @@ Future<void> createVoucherTables(DatabaseExecutor db) async {
     CREATE INDEX IF NOT EXISTS idx_user_point_redemptions_user
     ON user_point_redemptions (user_id)
   ''');
-}
-
-// ── Saran & Pesan Table & Helper Methods (Mata Kuliah Pemrograman Aplikasi Mobile) ────
-
-Future<void> _createSaranPesanTable(DatabaseExecutor db) async {
-  await db.execute('''
-    CREATE TABLE IF NOT EXISTS course_saran_pesan (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL,
-      user_name TEXT,
-      user_email TEXT,
-      saran TEXT NOT NULL,
-      pesan TEXT NOT NULL,
-      created_at TEXT NOT NULL,
-      is_synced INTEGER NOT NULL DEFAULT 0
-    )
-  ''');
-  await db.execute('''
-    CREATE INDEX IF NOT EXISTS idx_course_saran_pesan_user_id
-    ON course_saran_pesan(user_id, created_at DESC)
-  ''');
-  await db.execute('''
-    CREATE INDEX IF NOT EXISTS idx_course_saran_pesan_created_at
-    ON course_saran_pesan(created_at DESC)
-  ''');
-}
-
-extension SaranPesanDatabaseExtension on AppDatabase {
-  /// Simpan Saran & Pesan mahasiswa ke database lokal SQLite
-  Future<int> insertSaranPesan(Map<String, dynamic> row) async {
-    final db = await database;
-    return await db.insert(
-      'course_saran_pesan',
-      row,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
-  /// Ambil riwayat Saran & Pesan khusus pengguna tertentu
-  Future<List<Map<String, dynamic>>> getSaranPesanByUser(String userId) async {
-    final db = await database;
-    return await db.query(
-      'course_saran_pesan',
-      where: 'user_id = ?',
-      whereArgs: [userId],
-      orderBy: 'created_at DESC',
-    );
-  }
-
-  /// Ambil seluruh data Saran & Pesan
-  Future<List<Map<String, dynamic>>> getAllSaranPesan() async {
-    final db = await database;
-    return await db.query(
-      'course_saran_pesan',
-      orderBy: 'created_at DESC',
-    );
-  }
-
-  /// Hapus satu Saran & Pesan berdasarkan ID
-  Future<int> deleteSaranPesan(String id) async {
-    final db = await database;
-    return await db.delete(
-      'course_saran_pesan',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
 }

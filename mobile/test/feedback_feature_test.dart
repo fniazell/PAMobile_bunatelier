@@ -7,7 +7,6 @@ import 'package:mobile/features/auth/providers/auth_provider.dart';
 import 'package:mobile/features/feedback/models/feedback_model.dart';
 import 'package:mobile/features/feedback/presentation/give_feedback_screen.dart';
 import 'package:mobile/features/feedback/presentation/widgets/feedback_success_dialog.dart';
-import 'package:mobile/features/feedback/providers/feedback_provider.dart';
 import 'package:mobile/features/feedback/services/feedback_service.dart';
 import 'package:mobile/features/orders/models/order_model.dart';
 import 'package:mobile/features/orders/presentation/orders_screen.dart';

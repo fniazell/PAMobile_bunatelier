@@ -1141,7 +1141,7 @@ class _AdminReportsTabState extends ConsumerState<AdminReportsTab> with SingleTi
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: feedbacks.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (context, idx) {
                       final item = feedbacks[idx];
                       final dateFormatted = DateFormat(
