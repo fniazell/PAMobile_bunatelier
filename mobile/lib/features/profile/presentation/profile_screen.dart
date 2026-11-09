@@ -479,6 +479,53 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ],
                 ),
               ),
+
+              const SizedBox(height: 24),
+
+              // ── Evaluasi Aplikasi Section ──────────────────────────────────
+              Text(
+                'EVALUASI APLIKASI',
+                style: textTheme.labelLarge?.copyWith(
+                  fontSize: 11,
+                  letterSpacing: 1.1,
+                  color: sectionHeaderColor,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Material(
+                color: cardBg,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: borderColor),
+                ),
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: const Icon(
+                        Icons.rate_review_rounded,
+                        color: AppColors.forestGreen,
+                      ),
+                      title: Text(
+                        'Feedback Aplikasi',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: textColor,
+                        ),
+                      ),
+                      subtitle: Text(
+                        'Beri penilaian UI/UX & saran pengembangan aplikasi',
+                        style: TextStyle(fontSize: 11, color: subtextColor),
+                      ),
+                      trailing: Icon(
+                        Icons.chevron_right_rounded,
+                        color: subtextColor,
+                      ),
+                      onTap: () => context.push('/app-feedback'),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 28),
 
               // ── Sign Out Button ───────────────────────────────────────────

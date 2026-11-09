@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/storage/secure_storage_service.dart';
+import '../../features/app_feedback/models/app_feedback_model.dart';
 import '../../features/feedback/models/feedback_model.dart';
 import '../../features/orders/models/order_model.dart';
 import '../../features/branch/models/branch_model.dart';
@@ -508,6 +509,183 @@ class SupabaseService {
     } catch (e) {
       debugPrint('Supabase fetchFeedbacks exception: $e');
       rethrow;
+    }
+  }
+
+  /// Kirim feedback evaluasi aplikasi (App Feedback) ke Supabase Cloud (tabel 'app_feedbacks')
+  Future<({bool success, String? error, AppFeedbackModel? feedback})> submitAppFeedback(
+    AppFeedbackModel feedback,
+  ) async {
+    final payload = feedback.toSupabaseMap();
+
+    // 1. Coba gunakan SupabaseClient jika sudah diinisialisasi
+    if (_initialized) {
+      try {
+        final inserted = await client
+            .from('app_feedbacks')
+            .insert(payload)
+            .select()
+            .single();
+        debugPrint('Supabase client app feedback inserted: $inserted');
+        final created = AppFeedbackModel.fromMap(
+          Map<String, dynamic>.from(inserted as Map),
+        ).copyWith(isSynced: true);
+        return (success: true, error: null, feedback: created);
+      } catch (e) {
+        debugPrint('Supabase client insert to app_feedbacks failed: $e');
+      }
+    }
+
+    // 2. Coba menggunakan REST API via Dio
+    try {
+      final token = await SecureStorageService().getAccessToken();
+      final headers = <String, dynamic>{
+        'apikey': anonKey,
+        'Authorization': 'Bearer ${token ?? anonKey}',
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation',
+      };
+
+      final response = await _dio.post(
+        '$projectUrl/rest/v1/app_feedbacks',
+        data: payload,
+        options: Options(headers: headers),
+      );
+
+      if ((response.statusCode == 201 || response.statusCode == 200) &&
+          response.data != null) {
+        Map<String, dynamic>? itemMap;
+        if (response.data is List && (response.data as List).isNotEmpty) {
+          itemMap = Map<String, dynamic>.from((response.data as List).first as Map);
+        } else if (response.data is Map) {
+          itemMap = Map<String, dynamic>.from(response.data as Map);
+        }
+        final created = itemMap != null
+            ? AppFeedbackModel.fromMap(itemMap).copyWith(isSynced: true)
+            : feedback.copyWith(isSynced: true);
+        return (success: true, error: null, feedback: created);
+      }
+
+      return (
+        success: false,
+        error: 'Gagal mengirim feedback ke server (${response.statusCode})',
+        feedback: null,
+      );
+    } on DioException catch (e) {
+      debugPrint('Supabase app feedback DioException: ${e.response?.data ?? e.message}');
+      String? errorMessage;
+      if (e.response?.data is Map) {
+        final data = e.response!.data as Map;
+        final rawMsg = data['message']?.toString();
+        errorMessage = rawMsg ?? data['error']?.toString();
+      }
+      return (
+        success: false,
+        error: errorMessage ?? e.message ?? 'Koneksi ke server terputus.',
+        feedback: null,
+      );
+    } catch (e) {
+      debugPrint('Supabase app feedback general exception: $e');
+      return (success: false, error: e.toString(), feedback: null);
+    }
+  }
+
+  /// Ambil riwayat feedback aplikasi dari Supabase untuk user tertentu
+  Future<List<AppFeedbackModel>> fetchUserAppFeedbacks(String userId) async {
+    // 1. Coba via SupabaseClient
+    if (_initialized) {
+      try {
+        final res = await client
+            .from('app_feedbacks')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', ascending: false);
+        if (res is List) {
+          return res.map((item) {
+            return AppFeedbackModel.fromMap(
+              Map<String, dynamic>.from(item as Map),
+            ).copyWith(isSynced: true);
+          }).toList();
+        }
+      } catch (e) {
+        debugPrint('Supabase client fetchUserAppFeedbacks failed: $e');
+      }
+    }
+
+    // 2. Coba REST API via Dio
+    try {
+      final token = await SecureStorageService().getAccessToken();
+      final headers = <String, dynamic>{
+        'apikey': anonKey,
+        'Authorization': 'Bearer ${token ?? anonKey}',
+        'Content-Type': 'application/json',
+      };
+
+      final response = await _dio.get(
+        '$projectUrl/rest/v1/app_feedbacks?user_id=eq.$userId&select=*&order=created_at.desc',
+        options: Options(headers: headers),
+      );
+
+      if (response.statusCode == 200 && response.data is List) {
+        final list = response.data as List;
+        return list.map((item) {
+          return AppFeedbackModel.fromMap(
+            Map<String, dynamic>.from(item as Map),
+          ).copyWith(isSynced: true);
+        }).toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Supabase fetchUserAppFeedbacks exception: $e');
+      return [];
+    }
+  }
+
+  /// Ambil seluruh feedback aplikasi dari Supabase (untuk admin / analitik)
+  Future<List<AppFeedbackModel>> fetchAllAppFeedbacks() async {
+    if (_initialized) {
+      try {
+        final res = await client
+            .from('app_feedbacks')
+            .select('*')
+            .order('created_at', ascending: false);
+        if (res is List) {
+          return res.map((item) {
+            return AppFeedbackModel.fromMap(
+              Map<String, dynamic>.from(item as Map),
+            ).copyWith(isSynced: true);
+          }).toList();
+        }
+      } catch (e) {
+        debugPrint('Supabase client fetchAllAppFeedbacks failed: $e');
+      }
+    }
+
+    try {
+      final token = await SecureStorageService().getAccessToken();
+      final headers = <String, dynamic>{
+        'apikey': anonKey,
+        'Authorization': 'Bearer ${token ?? anonKey}',
+        'Content-Type': 'application/json',
+      };
+
+      final response = await _dio.get(
+        '$projectUrl/rest/v1/app_feedbacks?select=*&order=created_at.desc',
+        options: Options(headers: headers),
+      );
+
+      if (response.statusCode == 200 && response.data is List) {
+        final list = response.data as List;
+        return list.map((item) {
+          return AppFeedbackModel.fromMap(
+            Map<String, dynamic>.from(item as Map),
+          ).copyWith(isSynced: true);
+        }).toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Supabase fetchAllAppFeedbacks exception: $e');
+      return [];
     }
   }
 

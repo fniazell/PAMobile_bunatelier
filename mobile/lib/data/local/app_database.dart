@@ -8,8 +8,12 @@ class AppDatabase {
   AppDatabase._init();
 
   Future<Database> get database async {
-    if (_database != null) return _database!;
+    if (_database != null) {
+      await _createAppFeedbackTable(_database!);
+      return _database!;
+    }
     _database = await _initDB('bun_atelier.db');
+    await _createAppFeedbackTable(_database!);
     return _database!;
   }
 
@@ -19,7 +23,7 @@ class AppDatabase {
 
     return await openDatabase(
       path,
-      version: 10,
+      version: 11,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -70,6 +74,7 @@ class AppDatabase {
     await _createOrderTables(db);
     await _createBranchTables(db);
     await _createVoucherTables(db);
+    await _createAppFeedbackTable(db);
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
@@ -197,6 +202,9 @@ class AppDatabase {
           'ALTER TABLE cached_orders ADD COLUMN user_id TEXT',
         );
       } catch (_) {}
+    }
+    if (oldVersion < 11) {
+      await _createAppFeedbackTable(db);
     }
   }
 
@@ -480,4 +488,95 @@ Future<void> createVoucherTables(DatabaseExecutor db) async {
     CREATE INDEX IF NOT EXISTS idx_user_point_redemptions_user
     ON user_point_redemptions (user_id)
   ''');
+}
+
+// ── App Feedback Table & Helper Methods ────────────────────────────────────────
+
+Future<void> _createAppFeedbackTable(DatabaseExecutor db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS app_feedbacks (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      user_name TEXT,
+      user_email TEXT,
+      rating_ui INTEGER NOT NULL,
+      rating_ux INTEGER NOT NULL,
+      rating_navigation INTEGER NOT NULL,
+      rating_performance INTEGER NOT NULL,
+      rating_functionality INTEGER NOT NULL,
+      rating_comfort INTEGER NOT NULL,
+      rating_overall REAL NOT NULL,
+      overall_experience TEXT NOT NULL,
+      favorite_feature TEXT NOT NULL,
+      had_issues INTEGER NOT NULL DEFAULT 0,
+      issue_description TEXT,
+      suggestions TEXT,
+      status TEXT NOT NULL DEFAULT 'TERKIRIM',
+      created_at TEXT NOT NULL,
+      is_synced INTEGER NOT NULL DEFAULT 0
+    )
+  ''');
+  await db.execute('''
+    CREATE INDEX IF NOT EXISTS idx_app_feedbacks_user_id
+    ON app_feedbacks(user_id, created_at DESC)
+  ''');
+  await db.execute('''
+    CREATE INDEX IF NOT EXISTS idx_app_feedbacks_created_at
+    ON app_feedbacks(created_at DESC)
+  ''');
+}
+
+extension AppFeedbackDatabaseExtension on AppDatabase {
+  /// Simpan evaluasi / feedback aplikasi ke database lokal SQLite
+  Future<int> insertAppFeedback(Map<String, dynamic> row) async {
+    final db = await database;
+    return await db.insert(
+      'app_feedbacks',
+      row,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Ambil riwayat feedback aplikasi khusus pengguna tertentu
+  Future<List<Map<String, dynamic>>> getAppFeedbacksByUser(String userId) async {
+    final db = await database;
+    return await db.query(
+      'app_feedbacks',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      orderBy: 'created_at DESC',
+    );
+  }
+
+  /// Ambil seluruh feedback aplikasi
+  Future<List<Map<String, dynamic>>> getAllAppFeedbacks() async {
+    final db = await database;
+    return await db.query(
+      'app_feedbacks',
+      orderBy: 'created_at DESC',
+    );
+  }
+
+  /// Ambil detail satu feedback aplikasi berdasarkan ID
+  Future<Map<String, dynamic>?> getAppFeedbackById(String id) async {
+    final db = await database;
+    final res = await db.query(
+      'app_feedbacks',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (res.isNotEmpty) return res.first;
+    return null;
+  }
+
+  /// Hapus satu feedback aplikasi
+  Future<int> deleteAppFeedback(String id) async {
+    final db = await database;
+    return await db.delete(
+      'app_feedbacks',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
 }

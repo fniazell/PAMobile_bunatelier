@@ -119,6 +119,23 @@ class SettingsSection extends ConsumerWidget {
             ),
             onTap: () => context.push('/support-chat'),
           ),
+          Divider(height: 1, indent: 56, color: borderColor),
+
+          // ── 5. Feedback Aplikasi ──────────────────────────────────────────
+          _SettingsTile(
+            icon: Icons.rate_review_outlined,
+            iconColor: AppColors.forestGreen,
+            title: 'Feedback Aplikasi',
+            textColor: textColor,
+            value: 'Evaluasi & Saran',
+            valueColor: subtextColor,
+            trailing: Icon(
+              Icons.chevron_right_rounded,
+              color: subtextColor,
+              size: 20,
+            ),
+            onTap: () => context.push('/app-feedback'),
+          ),
           const SizedBox(height: 4),
         ],
       ),
