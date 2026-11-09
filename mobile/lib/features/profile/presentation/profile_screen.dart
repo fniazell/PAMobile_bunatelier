@@ -482,9 +482,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
               const SizedBox(height: 24),
 
-              // ── Evaluasi Aplikasi Section ──────────────────────────────────
+              // ── Saran & Pesan Section (Mata Kuliah PAM) ────────────────────
               Text(
-                'EVALUASI APLIKASI',
+                'AKADEMIK & EVALUASI',
                 style: textTheme.labelLarge?.copyWith(
                   fontSize: 11,
                   letterSpacing: 1.1,
@@ -501,27 +501,38 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 child: Column(
                   children: [
                     ListTile(
-                      leading: const Icon(
-                        Icons.rate_review_rounded,
-                        color: AppColors.forestGreen,
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: (isDark
+                                  ? AppColors.coral
+                                  : AppColors.forestGreen)
+                              .withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.forum_outlined,
+                          size: 20,
+                          color: isDark ? AppColors.coral : AppColors.forestGreen,
+                        ),
                       ),
                       title: Text(
-                        'Feedback Aplikasi',
+                        'Saran & Pesan',
                         style: TextStyle(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.bold,
                           fontSize: 14,
                           color: textColor,
                         ),
                       ),
                       subtitle: Text(
-                        'Beri penilaian UI/UX & saran pengembangan aplikasi',
+                        'Saran mata kuliah & pesan untuk dosen pengampu PAM',
                         style: TextStyle(fontSize: 11, color: subtextColor),
                       ),
                       trailing: Icon(
                         Icons.chevron_right_rounded,
                         color: subtextColor,
                       ),
-                      onTap: () => context.push('/app-feedback'),
+                      onTap: () => context.push('/saran-pesan'),
                     ),
                   ],
                 ),

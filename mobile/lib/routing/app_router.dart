@@ -24,7 +24,7 @@ import '../features/admin/presentation/admin_scaffold.dart';
 import '../core/storage/secure_storage_service.dart';
 import '../features/feedback/presentation/feedback_screen.dart';
 import '../features/feedback/presentation/give_feedback_screen.dart';
-import '../features/app_feedback/presentation/app_feedback_screen.dart';
+import '../features/saran_pesan/presentation/saran_pesan_screen.dart';
 import '../features/ai_recommendation/models/ai_recommendation_models.dart';
 import '../features/ai_recommendation/presentation/ai_recommendation_entry_screen.dart';
 import '../features/ai_recommendation/presentation/ai_preference_selection_screen.dart';
@@ -59,7 +59,7 @@ class AppRouter {
   static const String supportChat = '/support-chat';
   static const String feedback = '/feedback';
   static const String giveFeedback = '/feedback/give';
-  static const String appFeedback = '/app-feedback';
+  static const String saranPesan = '/saran-pesan';
   static const String notifications = '/notifications';
   static const String admin = '/admin';
   static const String aiEntry = '/ai-recommendation';
@@ -201,8 +201,8 @@ class AppRouter {
         },
       ),
       GoRoute(
-        path: appFeedback,
-        builder: (context, state) => const AppFeedbackScreen(),
+        path: saranPesan,
+        builder: (context, state) => const SaranPesanScreen(),
       ),
       GoRoute(
         path: notifications,

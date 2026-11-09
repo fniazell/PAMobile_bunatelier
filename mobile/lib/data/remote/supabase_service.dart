@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/storage/secure_storage_service.dart';
-import '../../features/app_feedback/models/app_feedback_model.dart';
+import '../../features/saran_pesan/models/saran_pesan_model.dart';
 import '../../features/feedback/models/feedback_model.dart';
 import '../../features/orders/models/order_model.dart';
 import '../../features/branch/models/branch_model.dart';
@@ -512,27 +512,27 @@ class SupabaseService {
     }
   }
 
-  /// Kirim feedback evaluasi aplikasi (App Feedback) ke Supabase Cloud (tabel 'app_feedbacks')
-  Future<({bool success, String? error, AppFeedbackModel? feedback})> submitAppFeedback(
-    AppFeedbackModel feedback,
+  /// Kirim Saran & Pesan (Mata Kuliah Pemrograman Aplikasi Mobile) ke Supabase Cloud (tabel 'course_saran_pesan')
+  Future<({bool success, String? error, SaranPesanModel? data})> submitSaranPesan(
+    SaranPesanModel item,
   ) async {
-    final payload = feedback.toSupabaseMap();
+    final payload = item.toSupabaseMap();
 
     // 1. Coba gunakan SupabaseClient jika sudah diinisialisasi
     if (_initialized) {
       try {
         final inserted = await client
-            .from('app_feedbacks')
+            .from('course_saran_pesan')
             .insert(payload)
             .select()
             .single();
-        debugPrint('Supabase client app feedback inserted: $inserted');
-        final created = AppFeedbackModel.fromMap(
+        debugPrint('Supabase client saran_pesan inserted: $inserted');
+        final created = SaranPesanModel.fromMap(
           Map<String, dynamic>.from(inserted as Map),
         ).copyWith(isSynced: true);
-        return (success: true, error: null, feedback: created);
+        return (success: true, error: null, data: created);
       } catch (e) {
-        debugPrint('Supabase client insert to app_feedbacks failed: $e');
+        debugPrint('Supabase client insert to course_saran_pesan failed: $e');
       }
     }
 
@@ -547,7 +547,7 @@ class SupabaseService {
       };
 
       final response = await _dio.post(
-        '$projectUrl/rest/v1/app_feedbacks',
+        '$projectUrl/rest/v1/course_saran_pesan',
         data: payload,
         options: Options(headers: headers),
       );
@@ -561,18 +561,18 @@ class SupabaseService {
           itemMap = Map<String, dynamic>.from(response.data as Map);
         }
         final created = itemMap != null
-            ? AppFeedbackModel.fromMap(itemMap).copyWith(isSynced: true)
-            : feedback.copyWith(isSynced: true);
-        return (success: true, error: null, feedback: created);
+            ? SaranPesanModel.fromMap(itemMap).copyWith(isSynced: true)
+            : item.copyWith(isSynced: true);
+        return (success: true, error: null, data: created);
       }
 
       return (
         success: false,
-        error: 'Gagal mengirim feedback ke server (${response.statusCode})',
-        feedback: null,
+        error: 'Gagal mengirim saran & pesan ke server (${response.statusCode})',
+        data: null,
       );
     } on DioException catch (e) {
-      debugPrint('Supabase app feedback DioException: ${e.response?.data ?? e.message}');
+      debugPrint('Supabase saran_pesan DioException: ${e.response?.data ?? e.message}');
       String? errorMessage;
       if (e.response?.data is Map) {
         final data = e.response!.data as Map;
@@ -582,33 +582,33 @@ class SupabaseService {
       return (
         success: false,
         error: errorMessage ?? e.message ?? 'Koneksi ke server terputus.',
-        feedback: null,
+        data: null,
       );
     } catch (e) {
-      debugPrint('Supabase app feedback general exception: $e');
-      return (success: false, error: e.toString(), feedback: null);
+      debugPrint('Supabase saran_pesan general exception: $e');
+      return (success: false, error: e.toString(), data: null);
     }
   }
 
-  /// Ambil riwayat feedback aplikasi dari Supabase untuk user tertentu
-  Future<List<AppFeedbackModel>> fetchUserAppFeedbacks(String userId) async {
+  /// Ambil riwayat Saran & Pesan dari Supabase untuk user tertentu
+  Future<List<SaranPesanModel>> fetchUserSaranPesan(String userId) async {
     // 1. Coba via SupabaseClient
     if (_initialized) {
       try {
         final res = await client
-            .from('app_feedbacks')
+            .from('course_saran_pesan')
             .select('*')
             .eq('user_id', userId)
             .order('created_at', ascending: false);
         if (res is List) {
           return res.map((item) {
-            return AppFeedbackModel.fromMap(
+            return SaranPesanModel.fromMap(
               Map<String, dynamic>.from(item as Map),
             ).copyWith(isSynced: true);
           }).toList();
         }
       } catch (e) {
-        debugPrint('Supabase client fetchUserAppFeedbacks failed: $e');
+        debugPrint('Supabase client fetchUserSaranPesan failed: $e');
       }
     }
 
@@ -622,42 +622,42 @@ class SupabaseService {
       };
 
       final response = await _dio.get(
-        '$projectUrl/rest/v1/app_feedbacks?user_id=eq.$userId&select=*&order=created_at.desc',
+        '$projectUrl/rest/v1/course_saran_pesan?user_id=eq.$userId&select=*&order=created_at.desc',
         options: Options(headers: headers),
       );
 
       if (response.statusCode == 200 && response.data is List) {
         final list = response.data as List;
         return list.map((item) {
-          return AppFeedbackModel.fromMap(
+          return SaranPesanModel.fromMap(
             Map<String, dynamic>.from(item as Map),
           ).copyWith(isSynced: true);
         }).toList();
       }
       return [];
     } catch (e) {
-      debugPrint('Supabase fetchUserAppFeedbacks exception: $e');
+      debugPrint('Supabase fetchUserSaranPesan exception: $e');
       return [];
     }
   }
 
-  /// Ambil seluruh feedback aplikasi dari Supabase (untuk admin / analitik)
-  Future<List<AppFeedbackModel>> fetchAllAppFeedbacks() async {
+  /// Ambil seluruh data Saran & Pesan dari Supabase (untuk dosen / rekap pengampu)
+  Future<List<SaranPesanModel>> fetchAllSaranPesan() async {
     if (_initialized) {
       try {
         final res = await client
-            .from('app_feedbacks')
+            .from('course_saran_pesan')
             .select('*')
             .order('created_at', ascending: false);
         if (res is List) {
           return res.map((item) {
-            return AppFeedbackModel.fromMap(
+            return SaranPesanModel.fromMap(
               Map<String, dynamic>.from(item as Map),
             ).copyWith(isSynced: true);
           }).toList();
         }
       } catch (e) {
-        debugPrint('Supabase client fetchAllAppFeedbacks failed: $e');
+        debugPrint('Supabase client fetchAllSaranPesan failed: $e');
       }
     }
 
@@ -670,21 +670,21 @@ class SupabaseService {
       };
 
       final response = await _dio.get(
-        '$projectUrl/rest/v1/app_feedbacks?select=*&order=created_at.desc',
+        '$projectUrl/rest/v1/course_saran_pesan?select=*&order=created_at.desc',
         options: Options(headers: headers),
       );
 
       if (response.statusCode == 200 && response.data is List) {
         final list = response.data as List;
         return list.map((item) {
-          return AppFeedbackModel.fromMap(
+          return SaranPesanModel.fromMap(
             Map<String, dynamic>.from(item as Map),
           ).copyWith(isSynced: true);
         }).toList();
       }
       return [];
     } catch (e) {
-      debugPrint('Supabase fetchAllAppFeedbacks exception: $e');
+      debugPrint('Supabase fetchAllSaranPesan exception: $e');
       return [];
     }
   }

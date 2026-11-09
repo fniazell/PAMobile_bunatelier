@@ -121,20 +121,20 @@ class SettingsSection extends ConsumerWidget {
           ),
           Divider(height: 1, indent: 56, color: borderColor),
 
-          // ── 5. Feedback Aplikasi ──────────────────────────────────────────
+          // ── 5. Saran & Pesan ──────────────────────────────────────────────
           _SettingsTile(
-            icon: Icons.rate_review_outlined,
+            icon: Icons.forum_outlined,
             iconColor: AppColors.forestGreen,
-            title: 'Feedback Aplikasi',
+            title: 'Saran & Pesan',
             textColor: textColor,
-            value: 'Evaluasi & Saran',
+            value: 'Mata Kuliah PAM',
             valueColor: subtextColor,
             trailing: Icon(
               Icons.chevron_right_rounded,
               color: subtextColor,
               size: 20,
             ),
-            onTap: () => context.push('/app-feedback'),
+            onTap: () => context.push('/saran-pesan'),
           ),
           const SizedBox(height: 4),
         ],

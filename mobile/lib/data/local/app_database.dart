@@ -9,11 +9,11 @@ class AppDatabase {
 
   Future<Database> get database async {
     if (_database != null) {
-      await _createAppFeedbackTable(_database!);
+      await _createSaranPesanTable(_database!);
       return _database!;
     }
     _database = await _initDB('bun_atelier.db');
-    await _createAppFeedbackTable(_database!);
+    await _createSaranPesanTable(_database!);
     return _database!;
   }
 
@@ -490,91 +490,67 @@ Future<void> createVoucherTables(DatabaseExecutor db) async {
   ''');
 }
 
-// ── App Feedback Table & Helper Methods ────────────────────────────────────────
+// ── Saran & Pesan Table & Helper Methods (Mata Kuliah Pemrograman Aplikasi Mobile) ────
 
-Future<void> _createAppFeedbackTable(DatabaseExecutor db) async {
+Future<void> _createSaranPesanTable(DatabaseExecutor db) async {
   await db.execute('''
-    CREATE TABLE IF NOT EXISTS app_feedbacks (
+    CREATE TABLE IF NOT EXISTS course_saran_pesan (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
       user_name TEXT,
       user_email TEXT,
-      rating_ui INTEGER NOT NULL,
-      rating_ux INTEGER NOT NULL,
-      rating_navigation INTEGER NOT NULL,
-      rating_performance INTEGER NOT NULL,
-      rating_functionality INTEGER NOT NULL,
-      rating_comfort INTEGER NOT NULL,
-      rating_overall REAL NOT NULL,
-      overall_experience TEXT NOT NULL,
-      favorite_feature TEXT NOT NULL,
-      had_issues INTEGER NOT NULL DEFAULT 0,
-      issue_description TEXT,
-      suggestions TEXT,
-      status TEXT NOT NULL DEFAULT 'TERKIRIM',
+      saran TEXT NOT NULL,
+      pesan TEXT NOT NULL,
       created_at TEXT NOT NULL,
       is_synced INTEGER NOT NULL DEFAULT 0
     )
   ''');
   await db.execute('''
-    CREATE INDEX IF NOT EXISTS idx_app_feedbacks_user_id
-    ON app_feedbacks(user_id, created_at DESC)
+    CREATE INDEX IF NOT EXISTS idx_course_saran_pesan_user_id
+    ON course_saran_pesan(user_id, created_at DESC)
   ''');
   await db.execute('''
-    CREATE INDEX IF NOT EXISTS idx_app_feedbacks_created_at
-    ON app_feedbacks(created_at DESC)
+    CREATE INDEX IF NOT EXISTS idx_course_saran_pesan_created_at
+    ON course_saran_pesan(created_at DESC)
   ''');
 }
 
-extension AppFeedbackDatabaseExtension on AppDatabase {
-  /// Simpan evaluasi / feedback aplikasi ke database lokal SQLite
-  Future<int> insertAppFeedback(Map<String, dynamic> row) async {
+extension SaranPesanDatabaseExtension on AppDatabase {
+  /// Simpan Saran & Pesan mahasiswa ke database lokal SQLite
+  Future<int> insertSaranPesan(Map<String, dynamic> row) async {
     final db = await database;
     return await db.insert(
-      'app_feedbacks',
+      'course_saran_pesan',
       row,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
-  /// Ambil riwayat feedback aplikasi khusus pengguna tertentu
-  Future<List<Map<String, dynamic>>> getAppFeedbacksByUser(String userId) async {
+  /// Ambil riwayat Saran & Pesan khusus pengguna tertentu
+  Future<List<Map<String, dynamic>>> getSaranPesanByUser(String userId) async {
     final db = await database;
     return await db.query(
-      'app_feedbacks',
+      'course_saran_pesan',
       where: 'user_id = ?',
       whereArgs: [userId],
       orderBy: 'created_at DESC',
     );
   }
 
-  /// Ambil seluruh feedback aplikasi
-  Future<List<Map<String, dynamic>>> getAllAppFeedbacks() async {
+  /// Ambil seluruh data Saran & Pesan
+  Future<List<Map<String, dynamic>>> getAllSaranPesan() async {
     final db = await database;
     return await db.query(
-      'app_feedbacks',
+      'course_saran_pesan',
       orderBy: 'created_at DESC',
     );
   }
 
-  /// Ambil detail satu feedback aplikasi berdasarkan ID
-  Future<Map<String, dynamic>?> getAppFeedbackById(String id) async {
-    final db = await database;
-    final res = await db.query(
-      'app_feedbacks',
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
-    if (res.isNotEmpty) return res.first;
-    return null;
-  }
-
-  /// Hapus satu feedback aplikasi
-  Future<int> deleteAppFeedback(String id) async {
+  /// Hapus satu Saran & Pesan berdasarkan ID
+  Future<int> deleteSaranPesan(String id) async {
     final db = await database;
     return await db.delete(
-      'app_feedbacks',
+      'course_saran_pesan',
       where: 'id = ?',
       whereArgs: [id],
     );
